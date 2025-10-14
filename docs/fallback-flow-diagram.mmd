@@ -1,0 +1,46 @@
+%% Fallback Chain Flow Diagram (Mermaid)
+%% Shows how fallback mechanism works for incident analysis
+
+flowchart TD
+    START([User Request:<br/>Analyze Incident])
+
+    START --> ROUTE{Task Router:<br/>Classify Request}
+
+    ROUTE -->|"Incident Analysis<br/>Category"| PRIMARY[Try Primary Provider:<br/>🏠 Local LLM]
+
+    PRIMARY --> LOCAL_EXEC[Local LLM:<br/>Analyze logs & metrics]
+
+    LOCAL_EXEC --> LOCAL_CHECK{Quality Check:<br/>Response Valid?}
+
+    LOCAL_CHECK -->|"✅ Passed<br/>Score ≥ 0.7"| SUCCESS1[✅ Return Local LLM Response]
+    SUCCESS1 --> END1([User receives response<br/>from Local LLM<br/>COST: $0])
+
+    LOCAL_CHECK -->|"❌ Failed or<br/>Provider Unavailable"| LOG1[📝 Log Fallback Event:<br/>Local → Claude]
+
+    LOG1 --> FALLBACK1[Try Fallback #1:<br/>🧠 Claude]
+
+    FALLBACK1 --> CLAUDE_EXEC[Claude:<br/>Deep analysis & reasoning]
+
+    CLAUDE_EXEC --> CLAUDE_CHECK{Quality Check:<br/>Response Valid?}
+
+    CLAUDE_CHECK -->|"✅ Passed<br/>Score ≥ 0.7"| SUCCESS2[✅ Return Claude Response]
+    SUCCESS2 --> END2([User receives response<br/>from Claude<br/>COST: $0.10])
+
+    CLAUDE_CHECK -->|"❌ Failed or<br/>Provider Unavailable"| LOG2[📝 Log Fallback Event:<br/>Claude → Gemini]
+
+    LOG2 --> FALLBACK2[Try Fallback #2:<br/>✨ Gemini]
+
+    FALLBACK2 --> GEMINI_EXEC[Gemini:<br/>Analysis attempt]
+
+    GEMINI_EXEC --> SUCCESS3[Return Gemini Response<br/>⚠️ Final Attempt]
+    SUCCESS3 --> END3([User receives response<br/>from Gemini<br/>COST: $0.05])
+
+    style START fill:#e3f2fd
+    style SUCCESS1 fill:#c8e6c9
+    style SUCCESS2 fill:#fff9c4
+    style SUCCESS3 fill:#ffe0b2
+    style END1 fill:#c8e6c9
+    style END2 fill:#fff9c4
+    style END3 fill:#ffe0b2
+    style LOG1 fill:#ffcdd2
+    style LOG2 fill:#ffcdd2

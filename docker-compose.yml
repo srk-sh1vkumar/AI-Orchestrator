@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - orchestrator
+    networks:
+      - orchestrator-network
+
+  orchestrator:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - REDIS_URL=redis://redis:6379/0
+      - LOCAL_LLM_BASE_URL=http://ollama:11434
+    depends_on:
+      - redis
+      - ollama
+    volumes:
+      - ./src:/app/src
+      - ~/.kube:/root/.kube:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - orchestrator-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - orchestrator-network
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - orchestrator-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - orchestrator-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - orchestrator-network
+
+volumes:
+  redis-data:
+  ollama-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  orchestrator-network:
+    driver: bridge

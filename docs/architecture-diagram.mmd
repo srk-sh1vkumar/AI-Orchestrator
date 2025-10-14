@@ -1,0 +1,144 @@
+%% AI Orchestrator Architecture Diagram (Mermaid)
+%% View this at: https://mermaid.live or with Mermaid preview extension
+
+graph TB
+    subgraph "User Layer"
+        USER[👤 User]
+        CLI[🖥️ CLI Interface<br/>Rich Terminal UI]
+        API_CLIENT[📱 API Client<br/>HTTP/REST]
+    end
+
+    subgraph "API Gateway Layer"
+        FASTAPI[⚡ FastAPI Server<br/>Port 8000]
+        CHAT_EP[/api/chat]
+        HEALTH_EP[/api/health]
+        METRICS_EP[/metrics]
+    end
+
+    subgraph "Core Orchestration Layer"
+        ORCHESTRATOR[🎯 Orchestrator<br/>Main Engine]
+        ROUTER[🧭 Task Router<br/>Intent Analysis]
+        QUALITY[✅ Quality Checker<br/>Response Validation]
+        TOOL_MGR[🛠️ Tool Manager<br/>Execution Engine]
+    end
+
+    subgraph "LLM Provider Layer"
+        subgraph "Code & DevOps"
+            CLAUDE_CODE[🤖 Claude Code<br/>Sonnet 3.5<br/>Code/DevOps/Deploy]
+        end
+
+        subgraph "UI & Workflow"
+            CHATGPT[💬 ChatGPT<br/>GPT-4 Turbo<br/>UI/UX/Workflows]
+        end
+
+        subgraph "Prompt Engineering"
+            GEMINI[✨ Gemini<br/>Gemini Pro<br/>Meta-Prompting]
+        end
+
+        subgraph "Analysis & Reasoning"
+            CLAUDE[🧠 Claude<br/>Sonnet 3.5<br/>Analysis/Reasoning]
+        end
+
+        subgraph "Privacy & Local"
+            LOCAL[🏠 Local LLM<br/>Ollama<br/>Incident Analysis]
+        end
+    end
+
+    subgraph "Tool Execution Layer"
+        subgraph "Version Control"
+            GITHUB[📦 GitHub API<br/>Repos/PRs/Issues]
+        end
+
+        subgraph "Container Orchestration"
+            DOCKER[🐳 Docker<br/>Build/Run/Manage]
+            K8S[☸️ Kubernetes<br/>Deploy/Scale]
+        end
+
+        subgraph "System Operations"
+            TERMINAL[💻 Terminal<br/>Shell Commands]
+            FS[📁 File System<br/>Read/Write/List]
+        end
+
+        subgraph "Monitoring & Logs"
+            GRAFANA[📊 Grafana<br/>Dashboards]
+            PROM[📈 Prometheus<br/>Metrics]
+            ELK[🔍 ELK Stack<br/>Log Analysis]
+        end
+    end
+
+    subgraph "Infrastructure Layer"
+        REDIS[(🗄️ Redis<br/>Cache/Sessions)]
+        OLLAMA[🦙 Ollama Server<br/>Local Models]
+        PROM_SRV[📊 Prometheus<br/>Metrics Store]
+        GRAFANA_SRV[📈 Grafana<br/>Visualization]
+    end
+
+    %% User to API connections
+    USER --> CLI
+    USER --> API_CLIENT
+    CLI --> FASTAPI
+    API_CLIENT --> FASTAPI
+
+    %% API endpoints
+    FASTAPI --> CHAT_EP
+    FASTAPI --> HEALTH_EP
+    FASTAPI --> METRICS_EP
+
+    %% API to Orchestrator
+    CHAT_EP --> ORCHESTRATOR
+    HEALTH_EP --> ORCHESTRATOR
+
+    %% Orchestrator to Core Components
+    ORCHESTRATOR --> ROUTER
+    ORCHESTRATOR --> QUALITY
+    ORCHESTRATOR --> TOOL_MGR
+
+    %% Router to Providers
+    ROUTER -.->|Route Decision| CLAUDE_CODE
+    ROUTER -.->|Route Decision| CHATGPT
+    ROUTER -.->|Route Decision| GEMINI
+    ROUTER -.->|Route Decision| CLAUDE
+    ROUTER -.->|Route Decision| LOCAL
+
+    %% Fallback Chain for Analysis
+    LOCAL -.->|Fallback #1| CLAUDE
+    CLAUDE -.->|Fallback #2| GEMINI
+
+    %% Quality Checker
+    CLAUDE_CODE --> QUALITY
+    CHATGPT --> QUALITY
+    GEMINI --> QUALITY
+    CLAUDE --> QUALITY
+    LOCAL --> QUALITY
+
+    %% Providers to Tools
+    CLAUDE_CODE --> TOOL_MGR
+    CHATGPT --> TOOL_MGR
+    CLAUDE --> TOOL_MGR
+
+    %% Tool Manager to Tools
+    TOOL_MGR --> GITHUB
+    TOOL_MGR --> DOCKER
+    TOOL_MGR --> K8S
+    TOOL_MGR --> TERMINAL
+    TOOL_MGR --> FS
+    TOOL_MGR -.-> GRAFANA
+    TOOL_MGR -.-> PROM
+    TOOL_MGR -.-> ELK
+
+    %% Infrastructure connections
+    ORCHESTRATOR --> REDIS
+    LOCAL --> OLLAMA
+    METRICS_EP --> PROM_SRV
+    PROM_SRV --> GRAFANA_SRV
+
+    %% Styling
+    classDef providerStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef toolStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef coreStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef infraStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+
+    class CLAUDE_CODE,CHATGPT,GEMINI,CLAUDE,LOCAL providerStyle
+    class GITHUB,DOCKER,K8S,TERMINAL,FS,GRAFANA,PROM,ELK toolStyle
+    class ORCHESTRATOR,ROUTER,QUALITY,TOOL_MGR coreStyle
+    class REDIS,OLLAMA,PROM_SRV,GRAFANA_SRV infraStyle
