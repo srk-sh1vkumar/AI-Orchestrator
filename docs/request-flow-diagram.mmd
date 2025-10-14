@@ -1,0 +1,67 @@
+%% Request Flow Diagram (Mermaid)
+%% Shows the complete flow of a request through the system
+
+sequenceDiagram
+    participant User
+    participant API as FastAPI Server
+    participant Orch as Orchestrator
+    participant Router as Task Router
+    participant Quality as Quality Checker
+    participant Claude as Claude Code
+    participant Local as Local LLM
+    participant Tools as Tool Manager
+    participant GitHub as GitHub API
+    participant Docker as Docker
+
+    Note over User,Docker: Example: "Build and deploy a REST API"
+
+    User->>API: POST /api/chat
+    API->>Orch: process_request()
+
+    %% Routing Phase
+    Orch->>Router: route(message)
+    Router->>Router: Analyze patterns
+    Router->>Router: Classify task category
+    Router->>Router: Calculate confidence scores
+    Router-->>Orch: RoutingDecision<br/>(provider=Claude Code, confidence=0.9)
+
+    Note over Orch: Selected: Claude Code (Primary)<br/>Fallback: Claude
+
+    %% LLM Execution Phase
+    Orch->>Claude: complete(messages, tools)
+    Note over Claude: Generate response with tool calls
+    Claude-->>Orch: LLMResponse<br/>(content + tool_calls)
+
+    %% Tool Execution Phase
+    Note over Orch,Docker: Execute tool calls
+    Orch->>Tools: execute_tools(tool_calls)
+
+    par GitHub Operations
+        Tools->>GitHub: create_repository()
+        GitHub-->>Tools: repo_url
+    and Docker Operations
+        Tools->>Docker: build_image()
+        Docker-->>Tools: image_id
+        Tools->>Docker: run_container()
+        Docker-->>Tools: container_id
+    end
+
+    Tools-->>Orch: tool_results[]
+
+    %% Final Response Phase
+    Note over Orch: Get final response with tool results
+    Orch->>Claude: complete(messages + tool_results)
+    Claude-->>Orch: final_response
+
+    %% Quality Check Phase
+    Orch->>Quality: check(response)
+    Quality->>Quality: Validate length
+    Quality->>Quality: Check patterns
+    Quality->>Quality: Calculate score
+    Quality-->>Orch: QualityCheck(passed=true, score=0.95)
+
+    %% Response
+    Orch-->>API: ChatResponse
+    API-->>User: JSON Response<br/>(message, provider, tools_executed)
+
+    Note over User: Receives: Code + Deployed Service

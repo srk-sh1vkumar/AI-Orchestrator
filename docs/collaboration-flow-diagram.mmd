@@ -1,0 +1,69 @@
+%% Multi-LLM Collaboration Flow Diagram (Mermaid)
+%% Shows how multiple LLMs collaborate on complex tasks
+
+sequenceDiagram
+    participant User
+    participant Orch as Orchestrator
+    participant Router as Task Router
+    participant Gemini as ✨ Gemini
+    participant ChatGPT as 💬 ChatGPT
+    participant Claude as 🤖 Claude Code
+    participant Tools as Tool Manager
+    participant K8s as Kubernetes
+
+    Note over User,K8s: Example: "Build a complete monitoring dashboard"
+
+    User->>Orch: "Build complete dashboard with deployment"
+
+    Orch->>Router: route(message, enable_collaboration=True)
+
+    Router->>Router: Detect collaboration pattern
+    Router->>Router: Create collaboration plan
+
+    Router-->>Orch: RoutingDecision<br/>collaboration_plan=[Gemini, ChatGPT, Claude]
+
+    Note over Orch: Multi-LLM Collaboration Required
+
+    rect rgb(230, 245, 255)
+        Note over Gemini: Step 1: Optimize Requirements
+        Orch->>Gemini: complete("Build dashboard...")
+        Gemini->>Gemini: Analyze requirements
+        Gemini->>Gemini: Create optimal specifications
+        Gemini->>Gemini: Design best practices
+        Gemini-->>Orch: "Detailed specs:<br/>- Real-time metrics<br/>- Alert system<br/>- Auto-refresh"
+        Note over Orch: Context accumulated
+    end
+
+    rect rgb(255, 243, 224)
+        Note over ChatGPT: Step 2: Design UI/UX
+        Orch->>ChatGPT: complete("Previous: [Gemini specs]<br/>Now design UI...")
+        ChatGPT->>ChatGPT: Design layout
+        ChatGPT->>ChatGPT: Create components
+        ChatGPT->>ChatGPT: Define interactions
+        ChatGPT-->>Orch: "Dashboard design:<br/>- Grid layout<br/>- Chart components<br/>- Navigation"
+        Note over Orch: Context accumulated
+    end
+
+    rect rgb(232, 245, 233)
+        Note over Claude: Step 3: Implement & Deploy
+        Orch->>Claude: complete("Previous: [Gemini + ChatGPT]<br/>Now implement...")
+        Claude->>Claude: Generate code
+        Claude->>Claude: Create Docker config
+        Claude->>Claude: Request tool execution
+        Claude-->>Orch: "Code + tool_calls:<br/>- build_docker_image()<br/>- deploy_to_k8s()"
+
+        Orch->>Tools: execute_tools(tool_calls)
+        Tools->>Tools: Build Docker image
+        Tools->>K8s: Deploy to cluster
+        K8s-->>Tools: deployment_url
+        Tools-->>Orch: tool_results
+
+        Orch->>Claude: complete(messages + tool_results)
+        Claude-->>Orch: "✅ Deployed to:<br/>https://dashboard.example.com"
+    end
+
+    Orch->>Orch: Aggregate all steps
+
+    Orch-->>User: ChatResponse<br/>collaboration_steps=[3]<br/>message=[Full implementation]
+
+    Note over User: Receives:<br/>1. Optimized specs (Gemini)<br/>2. UI design (ChatGPT)<br/>3. Deployed dashboard (Claude)
