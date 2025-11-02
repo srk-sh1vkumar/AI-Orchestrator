@@ -15,9 +15,11 @@ class GeminiProvider(BaseLLMProvider):
         """Initialize Gemini provider."""
         super().__init__(LLMProvider.GEMINI)
         genai.configure(api_key=settings.google_api_key)
-        self.model = genai.GenerativeModel("gemini-pro")
+        # Use gemini-2.5-flash: Current stable model (replaces retired 1.5 Flash)
+        # Gemini 1.5 models were retired April 29, 2025
+        self.model = genai.GenerativeModel("gemini-2.5-flash")
 
-    async def complete(
+    async def _complete_impl(
         self,
         messages: List[Message],
         tools: Optional[List[Dict[str, Any]]] = None,
@@ -74,7 +76,7 @@ class GeminiProvider(BaseLLMProvider):
                 tool_calls=[],  # Gemini doesn't support function calling in this version
                 tokens_used=None,  # Token usage not available
                 execution_time=execution_time,
-                metadata={"model": "gemini-pro"},
+                metadata={"model": "gemini-2.5-flash"},
             )
 
         except Exception as e:

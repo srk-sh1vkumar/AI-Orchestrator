@@ -17,7 +17,7 @@ class ClaudeProvider(BaseLLMProvider):
         self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
         self.model = "claude-3-5-sonnet-20241022"
 
-    async def complete(
+    async def _complete_impl(
         self,
         messages: List[Message],
         tools: Optional[List[Dict[str, Any]]] = None,
@@ -38,6 +38,10 @@ class ClaudeProvider(BaseLLMProvider):
         start_time = time.time()
 
         try:
+            # Anthropic SDK requires max_tokens to be set (cannot be None)
+            if max_tokens is None:
+                max_tokens = 4096
+
             formatted_messages = self.format_messages(messages)
 
             system_message = """You are Claude, specialized in:

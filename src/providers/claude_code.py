@@ -20,14 +20,14 @@ class ClaudeCodeProvider(BaseLLMProvider):
         self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
         self.model = "claude-3-5-sonnet-20241022"  # Latest Claude model
 
-    async def complete(
+    async def _complete_impl(
         self,
         messages: List[Message],
         tools: Optional[List[Dict[str, Any]]] = None,
         temperature: float = 0.7,
         max_tokens: Optional[int] = 4096,
     ) -> LLMResponse:
-        """Generate a completion using Claude Code.
+        """Generate a completion using Claude Code (implementation).
 
         Args:
             messages: Conversation messages
@@ -41,6 +41,10 @@ class ClaudeCodeProvider(BaseLLMProvider):
         start_time = time.time()
 
         try:
+            # Anthropic SDK requires max_tokens to be set (cannot be None)
+            if max_tokens is None:
+                max_tokens = 4096
+
             formatted_messages = self.format_messages(messages)
 
             # Add system message for Claude Code role
