@@ -1,0 +1,101 @@
+Documentation Organization Plan - AI Orchestrator
+Date: 2025-11-02
+
+===================================================================
+ROOT-LEVEL MARKDOWN FILES CATEGORIZATION (40+ files)
+===================================================================
+
+CATEGORY: ENHANCEMENTS (docs/enhancements/)
+-------------------------------------------------------------------
+✅ ENHANCEMENT_002_COMPLETE.md
+✅ ENHANCEMENT_003_COMPLETE.md
+✅ ENHANCEMENT_013_COMPLETE.md
+✅ ENHANCEMENT_TRACKER.md → Duplicate of PROJECT_ENHANCEMENT_TRACKER_DB.yaml
+✅ ENHANCEMENT_TRACKER_SUMMARY.md
+✅ FINAL_DELIVERABLES.md
+✅ FINAL_SUMMARY.md
+✅ FRONTEND_INTEGRATION_COMPLETE.md
+✅ IMPLEMENTATION_COMPLETE.md
+✅ IMPLEMENTATION_SUMMARY.md
+✅ ISSUE_RESOLUTION_SUMMARY.md
+✅ TOKEN_ANALYTICS_IMPLEMENTATION.md
+✅ WEB_UI_COMPLETE.md
+
+CATEGORY: SETUP (docs/setup/)
+-------------------------------------------------------------------
+✅ DEEPSEEK_M1_SETUP_GUIDE.md
+✅ LOCAL_LLM_SETUP.md
+✅ QUICKSTART.md → CONSOLIDATE with existing docs/QUICK_REFERENCE.md
+✅ QUICKSTART_DEVAI.md
+✅ QUICK_START_TOKEN_ANALYTICS.md
+✅ SETUP_COMPLETE.md
+✅ TESTING_LOCAL_LLMS.md
+
+CATEGORY: ARCHITECTURE (docs/architecture/)
+-------------------------------------------------------------------
+✅ ARCHITECTURE_ENHANCEMENTS.md
+✅ DEVAI_INTEGRATION_NOTES.md
+✅ PORT_CONFIGURATION.md
+
+CATEGORY: DEVELOPMENT (docs/development/)
+-------------------------------------------------------------------
+✅ USAGE_GUIDE.md
+✅ WEB_UI_GUIDE.md
+
+CATEGORY: ROOT (Keep in root, but consolidate)
+-------------------------------------------------------------------
+✅ README.md → Main project README (KEEP)
+✅ README_DEVAI_ORCHESTRATOR.md → MERGE into README.md or archive
+✅ README_WEB_UI.md → MOVE to docs/development/ or merge with WEB_UI_GUIDE.md
+✅ TOKEN_ANALYTICS_README.md → MOVE to docs/development/
+
+CATEGORY: PROJECT MANAGEMENT (Keep in root or move to docs/)
+-------------------------------------------------------------------
+✅ NEXT_STEPS_ROADMAP.md → Keep in root (tactical planning)
+✅ PROJECT_STATUS.md → Archive (superseded by tracker)
+✅ PROJECT_SUMMARY.md → Archive (duplicate)
+✅ OPERATIONAL_READINESS.md → Archive (duplicate)
+✅ SYSTEM_STATUS.md → Archive (duplicate)
+✅ FUTURE_ENHANCEMENTS.md → Archive or merge with roadmap
+
+CATEGORY: TRACKING/DIAGNOSTIC (Archive)
+-------------------------------------------------------------------
+✅ TRACKER_DIAGNOSTIC.md → Archive
+✅ TRACKING_FILES_AUDIT.md → Archive
+✅ PERSONAL_TRACKER_DEEPSEEK.md → Archive
+✅ PERSONAL_TRACKER_INTEGRATION.md → Archive
+
+CATEGORY: DOCUMENTATION ABOUT DOCUMENTATION (docs/)
+-------------------------------------------------------------------
+✅ DOCUMENTATION_GOVERNANCE.md → MOVE to docs/
+✅ DOCUMENTATION_ORGANIZATION_COMPLETE.md → Archive (implementation report)
+✅ PHASE_1_DESIGN_REVIEW.md → Archive or docs/architecture/
+
+===================================================================
+ACTIONS TO TAKE:
+===================================================================
+
+1. Move enhancement completions to docs/enhancements/
+2. Move setup guides to docs/setup/
+3. Move architecture docs to docs/architecture/
+4. Move development guides to docs/development/
+5. Archive duplicate/superseded status reports
+6. Consolidate multiple README files
+7. Update docs/README.md with complete index
+8. Add redirect notes in archive/README.md
+
+===================================================================
+SINGLE SOURCE OF TRUTH VIOLATIONS TO FIX:
+===================================================================
+
+DUPLICATE: QUICKSTART files (3 versions)
+→ CONSOLIDATE into single docs/setup/QUICKSTART.md
+
+DUPLICATE: README files (4 versions)
+→ KEEP main README.md, archive others or merge content
+
+DUPLICATE: Status reports (5+ versions)
+→ ARCHIVE all, keep only latest in docs/enhancements/
+
+DUPLICATE: Tracker diagnostics (3+ versions)
+→ ARCHIVE all
