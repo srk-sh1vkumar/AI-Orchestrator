@@ -23,6 +23,7 @@ PRICING_TABLE = {
     # Anthropic Claude Models
     "claude-3-opus-20240229": (0.015, 0.075),
     "claude-3-sonnet-20240229": (0.003, 0.015),
+    "claude-3-5-sonnet-20241022": (0.003, 0.015),  # Claude 3.5 Sonnet (latest)
     "claude-3-haiku-20240307": (0.00025, 0.00125),
     "claude-2.1": (0.008, 0.024),
     "claude-2.0": (0.008, 0.024),
@@ -31,6 +32,10 @@ PRICING_TABLE = {
     "gemini-pro": (0.0005, 0.0015),
     "gemini-pro-vision": (0.0005, 0.0015),
     "gemini-ultra": (0.01, 0.03),
+    "gemini-2.5-flash": (0.0005, 0.0015),  # Current stable model (2025)
+    "gemini-2.5-flash-lite": (0.0003, 0.001),  # Free tier model
+    "gemini-2.5-pro": (0.0015, 0.005),
+    "gemini-2.0-flash": (0.0005, 0.0015),
 
     # Local models (free, but include compute costs)
     "llama2:13b": (0.0, 0.0),

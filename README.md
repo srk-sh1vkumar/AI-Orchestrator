@@ -163,15 +163,40 @@ poetry run pytest tests/test_routing.py
 ## Development
 
 ```bash
+# Activate Python 3.13 virtual environment
+source activate.sh
+
 # Format code
-poetry run black src tests
+black src tests
 
 # Lint
-poetry run ruff src tests
+ruff check --fix src tests
 
 # Type checking
-poetry run mypy src
+mypy src
 ```
+
+## Documentation
+
+**📚 [Complete Documentation →](docs/README.md)**
+
+Quick links:
+- **[Setup Guide](docs/setup/SETUP_GUIDE.md)** - Get started in 10 minutes
+- **[Quick Reference](docs/QUICK_REFERENCE.md)** - Daily command cheat sheet
+- **[Python 3.13 Migration](docs/setup/PYTHON_3.13_MIGRATION.md)** - Upgrade details
+- **[Enhancement 001 Report](docs/enhancements/ENHANCEMENT_001_COMPLETE.md)** - ML routing implementation
+- **[Database Schema](docs/DATABASE_SCHEMA.md)** - PostgreSQL design
+- **[API Reference](docs/api-reference.md)** - Complete API docs
+
+## Project Tracking
+
+**📊 Single Source of Truth**
+
+- **[PROJECT_ENHANCEMENT_TRACKER_DB.yaml](PROJECT_ENHANCEMENT_TRACKER_DB.yaml)** - Master tracker (13 enhancements)
+- **[NEXT_STEPS_ROADMAP.md](NEXT_STEPS_ROADMAP.md)** - Tactical planning (weekly updates)
+- **[docs/TRACKING_SYSTEM.md](docs/TRACKING_SYSTEM.md)** - How to use the tracking system
+
+**Rules:** [DOCUMENTATION_GOVERNANCE.md](DOCUMENTATION_GOVERNANCE.md) - No duplicates, single source of truth
 
 ## Monitoring
 

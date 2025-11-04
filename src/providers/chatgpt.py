@@ -1,10 +1,11 @@
 """ChatGPT provider integration."""
 
 import time
-from typing import List, Optional, Dict, Any
+import json
+from typing import List, Optional, Dict, Any, AsyncIterator
 from openai import AsyncOpenAI
 from src.providers.base import BaseLLMProvider
-from src.models.schemas import LLMResponse, LLMProvider, Message, ToolCall, ToolType
+from src.models.schemas import LLMResponse, LLMProvider, Message, ToolCall, ToolType, StreamChunk
 from src.core.config import settings
 
 
@@ -17,7 +18,7 @@ class ChatGPTProvider(BaseLLMProvider):
         self.client = AsyncOpenAI(api_key=settings.openai_api_key)
         self.model = "gpt-4-turbo-preview"
 
-    async def complete(
+    async def _complete_impl(
         self,
         messages: List[Message],
         tools: Optional[List[Dict[str, Any]]] = None,
@@ -78,11 +79,18 @@ class ChatGPTProvider(BaseLLMProvider):
 
             if message.tool_calls:
                 for tc in message.tool_calls:
+                    # Parse arguments from JSON string to dict
+                    try:
+                        params = json.loads(tc.function.arguments) if isinstance(tc.function.arguments, str) else tc.function.arguments
+                    except json.JSONDecodeError:
+                        self.logger.warning("failed_to_parse_tool_arguments", args=tc.function.arguments)
+                        params = {}
+
                     tool_calls.append(
                         ToolCall(
                             tool_type=self._map_tool_type(tc.function.name),
                             operation=tc.function.name,
-                            parameters=tc.function.arguments,
+                            parameters=params,
                             metadata={"tool_call_id": tc.id},
                         )
                     )
@@ -107,6 +115,99 @@ class ChatGPTProvider(BaseLLMProvider):
             self.logger.error("completion_failed", error=str(e))
             raise
 
+    async def _stream_impl(
+        self,
+        messages: List[Message],
+        tools: Optional[List[Dict[str, Any]]] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = 4096,
+    ) -> AsyncIterator[StreamChunk]:
+        """Stream a completion using ChatGPT.
+
+        Args:
+            messages: Conversation messages
+            tools: Available tools
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens
+
+        Yields:
+            StreamChunk: Incremental response chunks
+        """
+        try:
+            formatted_messages = self.format_messages(messages)
+
+            # Add system message for ChatGPT role
+            formatted_messages.insert(
+                0,
+                {
+                    "role": "system",
+                    "content": """You are ChatGPT specialized in:
+                    - User interface and UX design
+                    - Frontend development
+                    - Dashboard creation
+                    - Workflow automation
+                    - Interactive component generation
+                    - Report formatting and presentation
+
+                    Create beautiful, functional interfaces and automate complex workflows.""",
+                },
+            )
+
+            request_params: Dict[str, Any] = {
+                "model": self.model,
+                "messages": formatted_messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "stream": True,  # Enable streaming
+            }
+
+            if tools:
+                request_params["tools"] = tools
+                request_params["tool_choice"] = "auto"
+
+            # Create streaming request
+            stream = await self.client.chat.completions.create(**request_params)
+
+            total_tokens = 0
+
+            # Stream chunks
+            async for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    content = chunk.choices[0].delta.content
+                    yield StreamChunk(
+                        provider=self.provider,
+                        content=content,
+                        is_final=False
+                    )
+
+                # Check for finish
+                if chunk.choices[0].finish_reason:
+                    # Get token count if available
+                    if chunk.usage:
+                        total_tokens = chunk.usage.completion_tokens
+
+                    # Send final chunk
+                    yield StreamChunk(
+                        provider=self.provider,
+                        content="",
+                        is_final=True,
+                        tokens_used=total_tokens if total_tokens > 0 else None,
+                        metadata={
+                            "model": self.model,
+                            "finish_reason": chunk.choices[0].finish_reason
+                        }
+                    )
+
+            self.logger.info(
+                "streaming_completed",
+                tokens=total_tokens,
+                model=self.model
+            )
+
+        except Exception as e:
+            self.logger.error("streaming_failed", error=str(e))
+            raise
+
     async def health_check(self) -> bool:
         """Check if OpenAI API is accessible.
 
@@ -125,13 +226,35 @@ class ChatGPTProvider(BaseLLMProvider):
     def _map_tool_type(self, tool_name: str) -> ToolType:
         """Map tool name to ToolType enum."""
         mapping = {
-            "github": ToolType.GITHUB,
-            "file": ToolType.FILE_SYSTEM,
-            "terminal": ToolType.TERMINAL,
+            # GitHub tools
+            "create_issue": ToolType.GITHUB,
+            "create_pr": ToolType.GITHUB,
+            # Docker tools
+            "list_containers": ToolType.DOCKER,
+            "start_container": ToolType.DOCKER,
+            "stop_container": ToolType.DOCKER,
+            "build_image": ToolType.DOCKER,
+            # Kubernetes tools
+            "list_pods": ToolType.KUBERNETES,
+            "scale_deployment": ToolType.KUBERNETES,
+            # Terminal tools
+            "run_command": ToolType.TERMINAL,
+            # File system tools
+            "read_file": ToolType.FILE_SYSTEM,
+            "write_file": ToolType.FILE_SYSTEM,
+            "list_directory": ToolType.FILE_SYSTEM,
         }
 
+        # Direct match
+        if tool_name in mapping:
+            return mapping[tool_name]
+
+        # Fallback to partial match
+        tool_lower = tool_name.lower()
         for key, value in mapping.items():
-            if key in tool_name.lower():
+            if key in tool_lower or tool_lower in key:
                 return value
 
+        # Default fallback
+        self.logger.warning("unknown_tool_type", tool_name=tool_name)
         return ToolType.FILE_SYSTEM

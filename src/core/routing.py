@@ -1,13 +1,22 @@
 """Intelligent task routing engine."""
 
 import re
+import time
 from typing import Optional, List, Tuple
 from src.models.schemas import (
     LLMProvider,
     TaskCategory,
     RoutingDecision,
 )
+from src.core.intent_classifier import get_intent_classifier
 import structlog
+
+# Import routing metrics if available
+try:
+    from src.api.main import routing_method, routing_confidence, ml_classification_latency
+    METRICS_AVAILABLE = True
+except ImportError:
+    METRICS_AVAILABLE = False
 
 logger = structlog.get_logger()
 
@@ -80,9 +89,28 @@ class TaskRouter:
         ],
     }
 
-    def __init__(self) -> None:
-        """Initialize the router."""
+    def __init__(self, use_ml_routing: bool = True) -> None:
+        """Initialize the router.
+
+        Args:
+            use_ml_routing: Whether to use ML-based intent classification (default: True)
+                           Falls back to regex if False or if ML fails
+        """
         self.logger = logger.bind(component="task_router")
+        self.use_ml_routing = use_ml_routing
+
+        # Initialize ML classifier if enabled
+        if self.use_ml_routing:
+            try:
+                self.intent_classifier = get_intent_classifier()
+                self.logger.info("ml_routing_enabled", model=self.intent_classifier.model_name)
+            except Exception as e:
+                self.logger.error("ml_classifier_init_failed", error=str(e))
+                self.use_ml_routing = False
+                self.intent_classifier = None
+        else:
+            self.intent_classifier = None
+            self.logger.info("ml_routing_disabled", note="Using regex-based routing only")
 
     def extract_explicit_provider(self, message: str) -> Tuple[Optional[LLMProvider], str]:
         """Extract explicit provider mention from message.
@@ -129,8 +157,45 @@ class TaskRouter:
 
         return TaskCategory.GENERAL
 
+    def calculate_provider_scores_ml(
+        self, message: str
+    ) -> Tuple[LLMProvider, TaskCategory, float]:
+        """Calculate provider using ML-based intent classification.
+
+        Args:
+            message: User message
+
+        Returns:
+            Tuple of (provider, category, confidence)
+        """
+        if not self.intent_classifier:
+            raise RuntimeError("ML classifier not initialized")
+
+        # Time the ML classification
+        start_time = time.time()
+        provider, category, confidence = self.intent_classifier.classify(message)
+        classification_time = time.time() - start_time
+
+        # Record metrics
+        if METRICS_AVAILABLE:
+            ml_classification_latency.observe(classification_time)
+            routing_confidence.labels(
+                provider=provider.value,
+                method="ml"
+            ).observe(confidence)
+
+        self.logger.info(
+            "ml_classification",
+            provider=provider.value,
+            category=category.value,
+            confidence=f"{confidence:.3f}",
+            latency_ms=f"{classification_time*1000:.1f}",
+        )
+
+        return provider, category, confidence
+
     def calculate_provider_scores(self, message: str) -> dict[LLMProvider, float]:
-        """Calculate confidence scores for each provider.
+        """Calculate confidence scores for each provider using regex patterns.
 
         Args:
             message: User message
@@ -169,35 +234,37 @@ class TaskRouter:
     def get_fallback_chain(self, category: TaskCategory) -> List[LLMProvider]:
         """Get fallback provider chain for a task category.
 
+        Priority: Free-tier providers (Local, Gemini) before paid subscriptions (Claude, ChatGPT)
+
         Args:
             category: Task category
 
         Returns:
-            List of fallback providers in order
+            List of fallback providers in order (free-tier first, then paid)
         """
-        # Analysis tasks have special fallback chain
+        # Analysis tasks: Local first (free), then Gemini (free), then Claude (paid)
         if category in [
             TaskCategory.INCIDENT_ANALYSIS,
             TaskCategory.LOG_ANALYSIS,
             TaskCategory.TECHNICAL_ANALYSIS,
         ]:
-            return [LLMProvider.LOCAL, LLMProvider.CLAUDE, LLMProvider.GEMINI]
+            return [LLMProvider.LOCAL, LLMProvider.GEMINI, LLMProvider.CLAUDE]
 
-        # Code tasks fallback to Claude Code
+        # Code tasks: Gemini first (free), then Claude Code (paid)
         if category in [
             TaskCategory.CODE_GENERATION,
             TaskCategory.CODE_IMPLEMENTATION,
             TaskCategory.DEBUGGING,
             TaskCategory.DEPLOYMENT,
         ]:
-            return [LLMProvider.CLAUDE_CODE, LLMProvider.CLAUDE]
+            return [LLMProvider.GEMINI, LLMProvider.LOCAL, LLMProvider.CLAUDE_CODE, LLMProvider.CLAUDE]
 
-        # UI tasks fallback to ChatGPT then Claude
+        # UI tasks: Gemini first (free), then ChatGPT (paid), then Claude (paid)
         if category in [TaskCategory.UI_GENERATION, TaskCategory.WORKFLOW_AUTOMATION]:
-            return [LLMProvider.CHATGPT, LLMProvider.CLAUDE]
+            return [LLMProvider.GEMINI, LLMProvider.LOCAL, LLMProvider.CHATGPT, LLMProvider.CLAUDE]
 
-        # Default fallback chain
-        return [LLMProvider.CLAUDE, LLMProvider.GEMINI]
+        # Default fallback chain: Free providers first, then paid
+        return [LLMProvider.LOCAL, LLMProvider.GEMINI, LLMProvider.CLAUDE, LLMProvider.CHATGPT]
 
     def route(
         self,
@@ -226,6 +293,14 @@ class TaskRouter:
             category = self.classify_task(message)
             fallback_chain = self.get_fallback_chain(category)
 
+            # Record metrics
+            if METRICS_AVAILABLE:
+                routing_method.labels(method="explicit").inc()
+                routing_confidence.labels(
+                    provider=explicit_provider.value,
+                    method="explicit"
+                ).observe(1.0)
+
             return RoutingDecision(
                 provider=explicit_provider,
                 category=category,
@@ -252,21 +327,92 @@ class TaskRouter:
                 collaboration_plan=collab_plan,
             )
 
-        # Calculate provider scores
-        scores = self.calculate_provider_scores(message)
-        category = self.classify_task(message)
+        # Try ML-based classification first
+        routing_method_used = "ml"
+        if self.use_ml_routing and self.intent_classifier:
+            try:
+                provider, category, confidence = self.calculate_provider_scores_ml(message)
+                reasoning = f"ML-based routing with {confidence:.0%} confidence"
 
-        # Select provider with highest score
-        selected_provider = max(scores.items(), key=lambda x: x[1])
-        provider, confidence = selected_provider
+                # If ML confidence is low, use regex as fallback
+                if confidence < 0.6:
+                    self.logger.info(
+                        "ml_confidence_low_using_regex_fallback",
+                        ml_confidence=f"{confidence:.3f}",
+                    )
+
+                    # Calculate regex scores
+                    scores = self.calculate_provider_scores(message)
+                    selected_regex = max(scores.items(), key=lambda x: x[1])
+                    regex_provider, regex_confidence = selected_regex
+
+                    # Use regex if it has higher confidence
+                    if regex_confidence > confidence:
+                        provider = regex_provider
+                        confidence = regex_confidence
+                        category = self.classify_task(message)
+                        routing_method_used = "regex_fallback"
+                        reasoning = (
+                            f"Regex fallback routing with {confidence:.0%} confidence "
+                            f"(ML confidence was too low)"
+                        )
+                        self.logger.info(
+                            "regex_fallback_used",
+                            regex_provider=regex_provider.value,
+                            regex_confidence=f"{regex_confidence:.3f}",
+                        )
+
+                        # Record fallback metrics
+                        if METRICS_AVAILABLE:
+                            routing_confidence.labels(
+                                provider=provider.value,
+                                method="regex_fallback"
+                            ).observe(confidence)
+
+            except Exception as e:
+                self.logger.error("ml_routing_failed", error=str(e))
+                # Fall back to regex routing
+                scores = self.calculate_provider_scores(message)
+                category = self.classify_task(message)
+                selected_provider = max(scores.items(), key=lambda x: x[1])
+                provider, confidence = selected_provider
+                routing_method_used = "regex_fallback"
+                reasoning = f"Regex fallback routing (ML failed) with {confidence:.0%} confidence"
+
+                # Record fallback metrics
+                if METRICS_AVAILABLE:
+                    routing_confidence.labels(
+                        provider=provider.value,
+                        method="regex_fallback"
+                    ).observe(confidence)
+        else:
+            # Use regex-based routing
+            scores = self.calculate_provider_scores(message)
+            category = self.classify_task(message)
+
+            # Select provider with highest score
+            selected_provider = max(scores.items(), key=lambda x: x[1])
+            provider, confidence = selected_provider
+            routing_method_used = "regex"
+            reasoning = f"Regex-based routing with {confidence:.0%} confidence"
+
+            # Record regex metrics
+            if METRICS_AVAILABLE:
+                routing_confidence.labels(
+                    provider=provider.value,
+                    method="regex"
+                ).observe(confidence)
 
         # If no strong match, default to Claude Code for technical tasks
         if confidence < 0.5:
             provider = LLMProvider.CLAUDE_CODE
             confidence = 0.6
+            routing_method_used = "default"
             reasoning = "Default routing to Claude Code for general technical task"
-        else:
-            reasoning = f"Pattern-based routing with {confidence:.0%} confidence"
+
+        # Record routing method used
+        if METRICS_AVAILABLE:
+            routing_method.labels(method=routing_method_used).inc()
 
         fallback_chain = self.get_fallback_chain(category)
 

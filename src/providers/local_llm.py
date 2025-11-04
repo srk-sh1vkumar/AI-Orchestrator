@@ -18,7 +18,7 @@ class LocalLLMProvider(BaseLLMProvider):
         self.model = settings.local_llm_model
         self.timeout = settings.local_llm_timeout
 
-    async def complete(
+    async def _complete_impl(
         self,
         messages: List[Message],
         tools: Optional[List[Dict[str, Any]]] = None,

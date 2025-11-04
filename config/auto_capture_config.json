@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "min_completed_todos": 1,
+  "min_session_hours": 0.5,
+  "integration_tag": "architecture_enhancements",
+  "goal_title": "AI Orchestrator Architecture Enhancements",
+  "auto_save_summary": true,
+  "capture_on_completion": true,
+  "auto_detect_enhancement": true,
+  "inactivity_threshold_minutes": 30
+}

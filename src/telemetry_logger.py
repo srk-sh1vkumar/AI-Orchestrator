@@ -178,6 +178,47 @@ class TelemetryLogger:
             agents=len(breakdown)
         )
 
+    def log_token_analytics(
+        self,
+        agent: str,
+        tokens_used: int,
+        cost_usd: float,
+        model: str,
+        status: str = "success"
+    ) -> None:
+        """
+        Log comprehensive token analytics event with cost information.
+
+        This method combines token usage and cost data for analytics tracking.
+
+        Args:
+            agent: Agent name
+            tokens_used: Number of tokens consumed
+            cost_usd: Cost in USD for this request
+            model: Model identifier
+            status: Request status
+        """
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "event_type": "token_analytics",
+            "agent": agent,
+            "tokens_used": tokens_used,
+            "cost_usd": round(cost_usd, 6),
+            "model": model,
+            "status": status
+        }
+
+        self._write_json_log(self.agent_log_file, log_entry)
+
+        logger.info(
+            "token_analytics",
+            agent=agent,
+            tokens=tokens_used,
+            cost=cost_usd,
+            model=model,
+            status=status
+        )
+
     def log_self_dev_update(
         self,
         learning_hours: float,
