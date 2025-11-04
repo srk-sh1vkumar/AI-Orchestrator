@@ -9,11 +9,12 @@ interface ChatPageProps {
   selectedProvider?: LLMProvider;
 }
 
-export const ChatPage: React.FC<ChatPageProps> = ({ selectedProvider }) => {
+export const ChatPage: React.FC<ChatPageProps> = ({ selectedProvider: initialProvider }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastResponse, setLastResponse] = useState<ChatResponse | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<LLMProvider | undefined>(initialProvider);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -152,6 +153,39 @@ export const ChatPage: React.FC<ChatPageProps> = ({ selectedProvider }) => {
           )}
 
           <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* Provider Selection Bar */}
+      <div className="border-t bg-gray-50 p-3">
+        <div className="max-w-4xl mx-auto flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700">Provider:</label>
+          <select
+            value={selectedProvider || ''}
+            onChange={(e) => setSelectedProvider(e.target.value as LLMProvider || undefined)}
+            className="text-sm border rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">Auto-route (Smart Selection)</option>
+            <option value="claude_code">Claude Code (Code Generation)</option>
+            <option value="claude">Claude (Analysis & Reasoning)</option>
+            <option value="chatgpt">ChatGPT (UI & Workflows)</option>
+            <option value="gemini">Gemini (Free Tier - Prompts)</option>
+            <option value="local">Local (Ollama - Privacy)</option>
+          </select>
+          {selectedProvider && (
+            <button
+              onClick={() => setSelectedProvider(undefined)}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Clear
+            </button>
+          )}
+          <div className="flex-1"></div>
+          <span className="text-xs text-gray-500">
+            {selectedProvider
+              ? `Using: ${selectedProvider.replace('_', ' ')}`
+              : 'Intelligent routing enabled'}
+          </span>
         </div>
       </div>
 

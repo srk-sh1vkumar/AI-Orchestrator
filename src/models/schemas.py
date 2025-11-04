@@ -13,6 +13,9 @@ class LLMProvider(str, Enum):
     GEMINI = "gemini"
     CLAUDE = "claude"
     LOCAL = "local"
+    MISTRAL = "mistral"  # Mistral 7B for general incident analysis
+    LLAMA2 = "llama2"    # Llama2 7B for log analysis
+    CODELLAMA = "codellama"  # CodeLlama 7B for code-related incident analysis
 
 
 class TaskCategory(str, Enum):
@@ -82,7 +85,7 @@ class ChatRequest(BaseModel):
     context: Optional[Dict[str, Any]] = None
     explicit_provider: Optional[LLMProvider] = None
     session_id: Optional[str] = None
-    enable_tools: bool = True
+    enable_tools: bool = False  # Temporarily disabled until tool definitions are fixed
     enable_collaboration: bool = True
 
 
@@ -105,6 +108,16 @@ class LLMResponse(BaseModel):
     tokens_used: Optional[int] = None
     execution_time: float
     metadata: Optional[Dict[str, Any]] = None
+
+
+class StreamChunk(BaseModel):
+    """Individual chunk from streaming response."""
+    provider: LLMProvider
+    content: str  # Delta content (incremental text)
+    is_final: bool = False
+    tokens_used: Optional[int] = None
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 
 class FallbackEvent(BaseModel):

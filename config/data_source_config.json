@@ -1,0 +1,16 @@
+{
+  "enhancement_tracking": {
+    "mode": "dual",
+    "primary_source": "database",
+    "fallback_source": "yaml",
+    "write_to_both": true,
+    "yaml_file": "PROJECT_ENHANCEMENT_TRACKER_DB.yaml",
+    "mongodb_enabled": true
+  },
+  "description": {
+    "mode": "Mode options: 'yaml' (YAML only), 'database' (DB only), 'dual' (both with fallback)",
+    "primary_source": "Which source to read from first in dual mode",
+    "fallback_source": "Which source to use if primary fails",
+    "write_to_both": "In dual mode, write to both YAML and DB for consistency"
+  }
+}

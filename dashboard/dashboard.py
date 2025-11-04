@@ -406,12 +406,72 @@ def main():
     manifest = load_manifest()
 
     # Tabs
-    tab1, tab2 = st.tabs(["📊 System Status", "🌱 Self-Development"])
+    tab1, tab2, tab3 = st.tabs(["📊 System Status", "🔍 Token Analytics", "🌱 Self-Development"])
 
     with tab1:
         system_status_tab(manifest)
 
     with tab2:
+        # Import and render token analytics
+        from dashboard import token_analytics
+        if manifest:
+            st.markdown("### 📊 Token Usage & Cost Analytics")
+            st.markdown("Comprehensive monitoring of LLM token consumption and cost estimates")
+            st.markdown("---")
+
+            monitoring = manifest.get("monitoring", {})
+            token_usage = monitoring.get("token_usage", {})
+            cost_breakdown = monitoring.get("cost_breakdown", {})
+            local_llm_status = monitoring.get("local_llm_status", {})
+
+            # Key metrics
+            total_tokens = sum(data.get("total_tokens", 0) for data in token_usage.values())
+            total_cost = monitoring.get("estimated_costs_usd", 0.0)
+            total_requests = sum(len(data.get("requests", [])) for data in token_usage.values())
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("💵 Total Cost", f"${total_cost:.4f}")
+            with col2:
+                st.metric("🔢 Total Tokens", f"{total_tokens:,}")
+            with col3:
+                st.metric("📊 Requests", total_requests)
+            with col4:
+                st.metric("🤖 Agents", len(token_usage))
+
+            st.markdown("---")
+
+            # Charts
+            col1, col2 = st.columns(2)
+
+            with col1:
+                token_chart = token_analytics.create_token_usage_chart(token_usage)
+                st.plotly_chart(token_chart, use_container_width=True)
+
+            with col2:
+                cost_chart = token_analytics.create_cost_breakdown_chart(cost_breakdown)
+                st.plotly_chart(cost_chart, use_container_width=True)
+
+            # Timeline
+            st.markdown("### 📈 Token Usage Timeline")
+            timeline_chart = token_analytics.create_token_timeline_chart(token_usage)
+            st.plotly_chart(timeline_chart, use_container_width=True)
+
+            # Detailed table
+            st.markdown("### 💰 Cost Breakdown")
+            token_analytics.render_cost_table(cost_breakdown, token_usage)
+
+            # LLM health
+            st.markdown("### 🏥 Local LLM Health")
+            token_analytics.render_health_status(local_llm_status)
+
+            # Pricing reference
+            with st.expander("📋 Model Pricing Reference"):
+                token_analytics.render_pricing_table()
+        else:
+            st.info("ℹ️ No manifest data available. Run an orchestration to generate data.")
+
+    with tab3:
         self_development_tab(manifest)
 
     # Footer

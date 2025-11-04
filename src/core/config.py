@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     orchestrator_workers: int = Field(default=4)
     log_level: str = Field(default="INFO")
 
+    # MongoDB
+    mongodb_url: str = Field(default="mongodb://localhost:27017")
+
     # Redis
     redis_url: str = Field(default="redis://localhost:6379/0")
 
