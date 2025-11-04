@@ -17,12 +17,15 @@ interface SidebarProps {
   onProviderSelect: (provider?: LLMProvider) => void;
 }
 
-const providerInfo: Record<string, { name: string; icon: string }> = {
-  claude_code: { name: 'Claude Code', icon: '🤖' },
-  chatgpt: { name: 'ChatGPT', icon: '💬' },
-  gemini: { name: 'Gemini', icon: '✨' },
-  claude: { name: 'Claude', icon: '🧠' },
-  local: { name: 'Local LLM', icon: '🏠' },
+const providerInfo: Record<string, { name: string; icon: string; description?: string }> = {
+  claude_code: { name: 'Claude Code', icon: '🤖', description: 'Code & deployment' },
+  chatgpt: { name: 'ChatGPT', icon: '💬', description: 'UI & workflows' },
+  gemini: { name: 'Gemini', icon: '✨', description: 'Prompt optimization' },
+  claude: { name: 'Claude', icon: '🧠', description: 'Analysis & reasoning' },
+  local: { name: 'Local LLM', icon: '🏠', description: 'Generic local' },
+  mistral: { name: 'Mistral 7B', icon: '🔥', description: 'Incident analysis' },
+  llama2: { name: 'Llama2 7B', icon: '🦙', description: 'Log analysis' },
+  codellama: { name: 'CodeLlama 7B', icon: '💻', description: 'Code debugging' },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -143,7 +146,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span>{info.icon}</span>
-                    <span className="font-medium">{info.name}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{info.name}</span>
+                      {info.description && (
+                        <span className="text-xs text-gray-400">{info.description}</span>
+                      )}
+                    </div>
                   </div>
                   {getStatusIcon(isAvailable)}
                 </div>

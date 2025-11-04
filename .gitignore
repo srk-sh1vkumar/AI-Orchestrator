@@ -54,3 +54,6 @@ Thumbs.db
 # Project specific
 *.sqlite3
 *.db
+
+# Archived files
+archive/

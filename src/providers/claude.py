@@ -1,10 +1,10 @@
 """Claude provider integration (fallback for analysis)."""
 
 import time
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, AsyncIterator
 import anthropic
 from src.providers.base import BaseLLMProvider
-from src.models.schemas import LLMResponse, LLMProvider, Message, ToolCall, ToolType
+from src.models.schemas import LLMResponse, LLMProvider, Message, ToolCall, ToolType, StreamChunk
 from src.core.config import settings
 
 
@@ -102,6 +102,86 @@ class ClaudeProvider(BaseLLMProvider):
 
         except Exception as e:
             self.logger.error("completion_failed", error=str(e))
+            raise
+
+    async def _stream_impl(
+        self,
+        messages: List[Message],
+        tools: Optional[List[Dict[str, Any]]] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = 4096,
+    ) -> AsyncIterator[StreamChunk]:
+        """Stream a completion using Claude.
+
+        Args:
+            messages: Conversation messages
+            tools: Available tools
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens
+
+        Yields:
+            StreamChunk: Incremental response chunks
+        """
+        try:
+            # Anthropic SDK requires max_tokens to be set
+            if max_tokens is None:
+                max_tokens = 4096
+
+            formatted_messages = self.format_messages(messages)
+
+            system_message = """You are Claude, specialized in:
+            - Incident analysis and root cause investigation
+            - Complex reasoning and problem-solving
+            - Event correlation and pattern recognition
+            - Technical documentation
+            - Deep analytical thinking
+
+            Provide thorough, well-reasoned analysis."""
+
+            request_params: Dict[str, Any] = {
+                "model": self.model,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "messages": formatted_messages,
+                "system": system_message,
+            }
+
+            if tools:
+                request_params["tools"] = tools
+
+            # Use the synchronous streaming API with context manager
+            with self.client.messages.stream(**request_params) as stream:
+                # Stream text chunks
+                for text in stream.text_stream:
+                    yield StreamChunk(
+                        provider=self.provider,
+                        content=text,
+                        is_final=False
+                    )
+
+                # Get final message for token usage
+                final_message = stream.get_final_message()
+
+                # Send final chunk with metadata
+                yield StreamChunk(
+                    provider=self.provider,
+                    content="",
+                    is_final=True,
+                    tokens_used=final_message.usage.output_tokens,
+                    metadata={
+                        "model": self.model,
+                        "stop_reason": final_message.stop_reason
+                    }
+                )
+
+            self.logger.info(
+                "streaming_completed",
+                tokens=final_message.usage.output_tokens,
+                model=self.model
+            )
+
+        except Exception as e:
+            self.logger.error("streaming_failed", error=str(e))
             raise
 
     async def health_check(self) -> bool:

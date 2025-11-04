@@ -1,0 +1,32 @@
+[
+  {
+    "id": "proj_1761444429232",
+    "integration_tag": "ai_systems_design",
+    "title": "Context-Aware Routing Pattern",
+    "description": "Reusable orchestration template for intelligent model routing based on task context",
+    "artifact_type": "code",
+    "url": "https://github.com/user/ai-orchestrator/tree/main/patterns/context-routing",
+    "file_path": null,
+    "metadata": {
+      "language": "Python",
+      "lines_of_code": 450,
+      "test_coverage": "92%"
+    },
+    "created_at": "2025-10-26 02:07:09.232220"
+  },
+  {
+    "id": "proj_1761444853911",
+    "integration_tag": "architecture_enhancements",
+    "title": "Semantic Caching Layer",
+    "description": "Redis-based semantic caching system that uses embeddings to find similar queries and serve cached responses",
+    "artifact_type": "code",
+    "url": "https://github.com/user/ai-orchestrator",
+    "file_path": null,
+    "metadata": {
+      "lines_of_code": 450,
+      "tests": 15,
+      "coverage": 85
+    },
+    "created_at": "2025-10-26 02:14:13.910964"
+  }
+]

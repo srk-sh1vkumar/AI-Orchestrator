@@ -7,8 +7,16 @@ from src.tools.docker_tool import DockerTool
 from src.tools.kubernetes_tool import KubernetesTool
 from src.tools.terminal_tool import TerminalTool
 from src.tools.file_system_tool import FileSystemTool
+from src.tools.validator import get_validator, ValidationResult
 import structlog
 import time
+
+# Import metrics if available
+try:
+    from src.api.main import tool_validation_total, tool_validation_failures, tool_validation_duration
+    METRICS_AVAILABLE = True
+except ImportError:
+    METRICS_AVAILABLE = False
 
 logger = structlog.get_logger()
 
@@ -20,6 +28,7 @@ class ToolManager:
         """Initialize tool manager."""
         self.logger = logger.bind(component="tool_manager")
         self.tools: Dict[ToolType, Any] = {}
+        self.validator = get_validator()
         self._init_tools()
 
     def _init_tools(self) -> None:
@@ -38,13 +47,20 @@ class ToolManager:
         """Get tool definitions for LLM function calling.
 
         Returns:
-            List of tool definitions
+            List of tool definitions in OpenAI format
         """
         definitions = []
 
         for tool_type, tool_instance in self.tools.items():
             if hasattr(tool_instance, "get_definitions"):
-                definitions.extend(tool_instance.get_definitions())
+                # Get tool definitions and wrap them in OpenAI format
+                tool_defs = tool_instance.get_definitions()
+                for tool_def in tool_defs:
+                    # Wrap in OpenAI function calling format
+                    definitions.append({
+                        "type": "function",
+                        "function": tool_def
+                    })
 
         return definitions
 
@@ -90,21 +106,71 @@ class ToolManager:
 
             execution_time = time.time() - start_time
 
-            self.logger.info(
-                "tool_executed",
-                tool_type=tool_call.tool_type,
-                operation=tool_call.operation,
-                success=True,
-                time=execution_time,
-            )
-
-            return ToolResult(
+            # Create initial tool result
+            tool_result = ToolResult(
                 tool_type=tool_call.tool_type,
                 operation=tool_call.operation,
                 success=True,
                 result=result,
                 execution_time=execution_time,
             )
+
+            # Validate tool output
+            validation_start = time.time()
+            validation_result = self.validator.validate(tool_result, strict=False)
+            validation_time = time.time() - validation_start
+
+            # Record Prometheus metrics
+            if METRICS_AVAILABLE:
+                tool_validation_total.labels(
+                    tool_type=tool_call.tool_type.value,
+                    operation=tool_call.operation,
+                    status=validation_result.status.value
+                ).inc()
+
+                if not validation_result.is_valid and validation_result.errors:
+                    # Record first error type
+                    error_type = validation_result.errors[0][:50] if validation_result.errors else "unknown"
+                    tool_validation_failures.labels(
+                        tool_type=tool_call.tool_type.value,
+                        operation=tool_call.operation,
+                        error_type=error_type
+                    ).inc()
+
+                tool_validation_duration.labels(
+                    tool_type=tool_call.tool_type.value
+                ).observe(validation_time)
+
+            # Add validation metadata to tool result
+            if hasattr(tool_result, 'metadata') and tool_result.metadata:
+                tool_result.metadata['validation'] = validation_result.model_dump()
+            else:
+                # Store validation result separately if no metadata field
+                # We'll log it for now
+                self.logger.info(
+                    "tool_validation_complete",
+                    tool_type=tool_call.tool_type,
+                    operation=tool_call.operation,
+                    validation_status=validation_result.status,
+                    is_valid=validation_result.is_valid,
+                    errors=validation_result.errors if validation_result.errors else None,
+                    validation_time=validation_time,
+                )
+
+            # Use validated output if validation passed
+            if validation_result.is_valid and validation_result.validated_output is not None:
+                tool_result.result = validation_result.validated_output
+
+            self.logger.info(
+                "tool_executed",
+                tool_type=tool_call.tool_type,
+                operation=tool_call.operation,
+                success=True,
+                time=execution_time,
+                validated=validation_result.is_valid,
+            )
+
+            return tool_result
 
         except Exception as e:
             execution_time = time.time() - start_time
