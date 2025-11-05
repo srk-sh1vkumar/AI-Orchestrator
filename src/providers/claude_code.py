@@ -1,10 +1,10 @@
 """Claude Code provider integration."""
 
 import time
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, AsyncIterator
 import anthropic
 from src.providers.base import BaseLLMProvider
-from src.models.schemas import LLMResponse, LLMProvider, Message, ToolCall, ToolType
+from src.models.schemas import LLMResponse, LLMProvider, Message, ToolCall, ToolType, StreamChunk
 from src.core.config import settings
 import structlog
 
@@ -113,6 +113,31 @@ class ClaudeCodeProvider(BaseLLMProvider):
         except Exception as e:
             self.logger.error("completion_failed", error=str(e))
             raise
+
+
+    async def _stream_impl(
+        self,
+        messages: List[Message],
+        tools: Optional[List[Dict[str, Any]]] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> AsyncIterator[StreamChunk]:
+        """Stream completion using fallback implementation.
+
+        This provider uses the fallback streaming which calls the blocking API
+        and simulates streaming by chunking the response.
+
+        Args:
+            messages: Conversation messages
+            tools: Available tools
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens
+
+        Yields:
+            StreamChunk: Simulated incremental response chunks
+        """
+        async for chunk in self._stream_impl_fallback(messages, tools, temperature, max_tokens):
+            yield chunk
 
     async def health_check(self) -> bool:
         """Check if Claude API is accessible.

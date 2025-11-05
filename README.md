@@ -14,6 +14,7 @@ cd frontend && npm install && npm run dev
 ## Features
 
 - **🖥️ Modern Web UI**: Beautiful interface for easy interaction (NEW!)
+- **⚡ Real-Time Streaming**: See responses appear word-by-word with SSE streaming (NEW!)
 - **Intelligent Task Routing**: Automatically routes tasks to the most appropriate LLM based on intent
 - **Multi-LLM Collaboration**: Orchestrates complex tasks across multiple LLMs
 - **Direct Tool Execution**: LLMs can directly interact with GitHub, CI/CD, Docker, Kubernetes, monitoring systems, and more
@@ -111,6 +112,23 @@ curl -X POST http://localhost:8000/api/chat \
   -d '{"message": "@chatgpt: Create a dashboard for monitoring metrics"}'
 ```
 
+#### Real-Time Streaming (NEW!)
+
+```bash
+# Stream responses in real-time with Server-Sent Events
+curl -N -X POST http://localhost:8000/api/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"message": "@chatgpt: Explain microservices architecture"}'
+
+# Output:
+# data: {"provider":"chatgpt","content":"Microservices","is_final":false,...}
+# data: {"provider":"chatgpt","content":" architecture","is_final":false,...}
+# data: {"provider":"chatgpt","content":"","is_final":true,"tokens_used":42,...}
+```
+
+**Frontend Streaming:**
+The web UI automatically uses streaming for all responses. Toggle streaming on/off with the ⚡ switch.
+
 #### Incident Analysis with Fallback
 
 ```bash
@@ -183,6 +201,7 @@ mypy src
 Quick links:
 - **[Setup Guide](docs/setup/SETUP_GUIDE.md)** - Get started in 10 minutes
 - **[Quick Reference](docs/QUICK_REFERENCE.md)** - Daily command cheat sheet
+- **[Streaming Support](docs/ENHANCEMENT_008_COMPLETE.md)** - Real-time streaming responses (NEW!)
 - **[Python 3.13 Migration](docs/setup/PYTHON_3.13_MIGRATION.md)** - Upgrade details
 - **[Enhancement 001 Report](docs/enhancements/ENHANCEMENT_001_COMPLETE.md)** - ML routing implementation
 - **[Database Schema](docs/DATABASE_SCHEMA.md)** - PostgreSQL design

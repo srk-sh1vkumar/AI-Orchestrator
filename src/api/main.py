@@ -3,7 +3,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from prometheus_client import Counter, Histogram, make_asgi_app
 import structlog
 from src.models.schemas import ChatRequest, ChatResponse, HealthStatus
@@ -309,6 +309,90 @@ async def chat(request: ChatRequest) -> ChatResponse:
         logger.error("chat_request_failed", error=str(e))
         request_counter.labels(provider="unknown", category="unknown", status="error").inc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(request: ChatRequest):
+    """Stream chat responses using Server-Sent Events (SSE).
+
+    Args:
+        request: Chat request
+
+    Returns:
+        StreamingResponse with SSE format
+
+    Raises:
+        HTTPException: If request processing fails
+    """
+    async def event_generator():
+        """Generate SSE events from streaming response."""
+        try:
+            logger.info("streaming_request_received", message_length=len(request.message))
+
+            # Use orchestrator's routing to get provider and category
+            from src.models.schemas import Message
+
+            # Determine provider using orchestrator's router
+            if request.explicit_provider:
+                provider_enum = request.explicit_provider
+                category = None  # Will be determined by router if needed
+            else:
+                # Use orchestrator's router to decide
+                routing_decision = orchestrator.router.route(
+                    request.message,
+                    enable_collaboration=request.enable_collaboration
+                )
+                provider_enum = routing_decision.provider
+                category = routing_decision.category
+
+            # Get the provider instance from orchestrator's providers dict
+            provider = orchestrator.providers.get(provider_enum)
+            if not provider:
+                raise ValueError(f"Provider {provider_enum.value} not available")
+
+            # Create messages list
+            messages = [Message(role="user", content=request.message)]
+
+            # Stream from provider
+            async for chunk in provider.stream(messages):
+                # Format as SSE
+                chunk_data = {
+                    "provider": chunk.provider.value,
+                    "content": chunk.content,
+                    "is_final": chunk.is_final,
+                    "tokens_used": chunk.tokens_used,
+                    "metadata": chunk.metadata or {}
+                }
+
+                yield f"data: {json.dumps(chunk_data)}\n\n"
+
+                # Update metrics on final chunk
+                if chunk.is_final:
+                    request_counter.labels(
+                        provider=chunk.provider.value,
+                        category=category.value if category else "unknown",
+                        status="success",
+                    ).inc()
+
+            logger.info("streaming_request_completed", provider=provider_enum.value)
+
+        except Exception as e:
+            logger.error("streaming_request_failed", error=str(e))
+            error_data = {
+                "error": str(e),
+                "is_final": True
+            }
+            yield f"data: {json.dumps(error_data)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+            "Connection": "keep-alive",
+        }
+    )
 
 
 @app.get("/api/health", response_model=HealthStatus)

@@ -149,15 +149,23 @@ class ClaudeProvider(BaseLLMProvider):
             if tools:
                 request_params["tools"] = tools
 
-            # Use the synchronous streaming API with context manager
-            with self.client.messages.stream(**request_params) as stream:
+            # Use streaming API (synchronous API in async function)
+            # Note: Anthropic Python SDK v0.34+ supports streaming but not async streaming
+            # We need to use the sync stream in a way that works with async
+            stream = self.client.messages.stream(**request_params)
+
+            # Enter the context manager
+            stream.__enter__()
+
+            try:
                 # Stream text chunks
                 for text in stream.text_stream:
-                    yield StreamChunk(
-                        provider=self.provider,
-                        content=text,
-                        is_final=False
-                    )
+                    if text:  # Only yield non-empty chunks
+                        yield StreamChunk(
+                            provider=self.provider,
+                            content=text,
+                            is_final=False
+                        )
 
                 # Get final message for token usage
                 final_message = stream.get_final_message()
@@ -174,11 +182,14 @@ class ClaudeProvider(BaseLLMProvider):
                     }
                 )
 
-            self.logger.info(
-                "streaming_completed",
-                tokens=final_message.usage.output_tokens,
-                model=self.model
-            )
+                self.logger.info(
+                    "streaming_completed",
+                    tokens=final_message.usage.output_tokens,
+                    model=self.model
+                )
+            finally:
+                # Ensure stream is properly closed
+                stream.__exit__(None, None, None)
 
         except Exception as e:
             self.logger.error("streaming_failed", error=str(e))
