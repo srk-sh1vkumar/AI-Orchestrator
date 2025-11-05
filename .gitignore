@@ -57,3 +57,10 @@ Thumbs.db
 
 # Archived files
 archive/
+
+# Private personal data
+private/
+*_ROADMAP.md
+personal_tracker_data.json
+growth_data/
+session_data/
