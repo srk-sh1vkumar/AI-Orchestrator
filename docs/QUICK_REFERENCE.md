@@ -22,6 +22,7 @@ uvicorn src.api.main:app --reload           # Start API server → localhost:800
 | `SETUP_GUIDE.md` | Complete setup instructions |
 | `PYTHON_3.13_MIGRATION.md` | Python upgrade details |
 | `ENHANCEMENT_001_COMPLETE.md` | Intent routing implementation |
+| `ENHANCEMENT_008_COMPLETE.md` | Streaming responses (NEW!) |
 | `PROJECT_ENHANCEMENT_TRACKER_DB.yaml` | Enhancement roadmap |
 | `.vscode/settings.json` | IDE configuration |
 | `.github/workflows/python-ci.yml` | CI/CD pipeline |
@@ -39,9 +40,25 @@ python --version            # Check Python version (should be 3.13.7)
 
 ### Running
 ```bash
-uvicorn src.api.main:app --reload               # API server
+uvicorn src.api.main:app --reload               # API server (port 8000)
 python src/cli.py                               # CLI interface
-cd frontend && npm run dev                      # Frontend (port 3000)
+cd frontend && npm run dev                      # Frontend (port 5173)
+```
+
+### API Usage
+```bash
+# Standard chat (waits for complete response)
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Build a REST API"}'
+
+# Streaming chat (real-time responses) - NEW!
+curl -N -X POST http://localhost:8000/api/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"message": "@chatgpt: Explain Docker"}'
+
+# Health check
+curl http://localhost:8000/api/health
 ```
 
 ### Testing
@@ -70,4 +87,4 @@ mypy src/                                       # Type check
 
 ---
 
-**Last Updated:** 2025-10-21 | **Python:** 3.13.7 | **Status:** 🚀 Active Development
+**Last Updated:** 2025-11-05 | **Python:** 3.13.7 | **Status:** 🚀 Active Development | **New:** ⚡ Streaming Support
