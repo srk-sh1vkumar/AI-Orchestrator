@@ -1,0 +1,180 @@
+# vLLM High-Performance Inference Server
+# Enhancement 017: Production Architecture - Phase 1
+#
+# This compose file sets up vLLM for optimized local LLM inference
+# Requires: NVIDIA GPU with CUDA support
+
+version: '3.8'
+
+services:
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: ai-orchestrator-vllm
+    restart: unless-stopped
+
+    # GPU passthrough (requires nvidia-docker2)
+    runtime: nvidia
+
+    environment:
+      # NVIDIA GPU configuration
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+      # vLLM configuration
+      - VLLM_MODEL=${VLLM_MODEL:-meta-llama/Llama-2-13b-chat-hf}
+      - VLLM_PORT=8001
+      - VLLM_HOST=0.0.0.0
+      - VLLM_TENSOR_PARALLEL_SIZE=${VLLM_TENSOR_PARALLEL:-1}
+      - VLLM_GPU_MEMORY_UTILIZATION=${VLLM_GPU_MEMORY:-0.9}
+      - VLLM_MAX_MODEL_LEN=${VLLM_MAX_LEN:-4096}
+      - VLLM_ENABLE_PREFIX_CACHING=${VLLM_PREFIX_CACHE:-true}
+      - VLLM_SWAP_SPACE=${VLLM_SWAP_SPACE:-4}
+
+      # OpenTelemetry tracing (optional)
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT:-http://monitoring-hub-otel-collector:4317}
+      - OTEL_SERVICE_NAME=vllm-server
+
+    ports:
+      - "8001:8001"  # vLLM API port
+
+    volumes:
+      # Mount HuggingFace cache to avoid re-downloading models
+      - vllm-cache:/root/.cache/huggingface
+
+      # Optional: Mount custom models directory
+      # - ./models:/models:ro
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s  # Model loading can take time
+
+    # Resource limits
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: 16G  # Adjust based on model size
+
+    # Command to start vLLM server
+    command: >
+      --model ${VLLM_MODEL:-meta-llama/Llama-2-13b-chat-hf}
+      --host 0.0.0.0
+      --port 8001
+      --tensor-parallel-size ${VLLM_TENSOR_PARALLEL:-1}
+      --gpu-memory-utilization ${VLLM_GPU_MEMORY:-0.9}
+      --max-model-len ${VLLM_MAX_LEN:-4096}
+      --enable-prefix-caching
+      --swap-space ${VLLM_SWAP_SPACE:-4}
+      --disable-log-requests
+      --trust-remote-code
+
+    networks:
+      - ai-orchestrator-network
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Model downloader service
+  # Runs once to download models before starting vLLM
+  vllm-model-downloader:
+    image: python:3.11-slim
+    container_name: ai-orchestrator-vllm-downloader
+    restart: "no"
+
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}  # Optional: HuggingFace token for gated models
+
+    volumes:
+      - vllm-cache:/root/.cache/huggingface
+
+    command: >
+      bash -c "
+      pip install -q huggingface-hub &&
+      python -c \"
+      from huggingface_hub import snapshot_download;
+      import os;
+      model = os.getenv('VLLM_MODEL', 'meta-llama/Llama-2-13b-chat-hf');
+      print(f'Downloading model: {model}...');
+      snapshot_download(
+          repo_id=model,
+          cache_dir='/root/.cache/huggingface',
+          token=os.getenv('HF_TOKEN')
+      );
+      print('Model download complete!')
+      \"
+      "
+
+    profiles:
+      - download  # Only run with: docker-compose --profile download up
+
+volumes:
+  vllm-cache:
+    driver: local
+
+networks:
+  ai-orchestrator-network:
+    external: true
+    # Create with: docker network create ai-orchestrator-network
+
+# Usage Instructions:
+#
+# 1. Install prerequisites:
+#    - NVIDIA drivers
+#    - NVIDIA Docker runtime (nvidia-docker2)
+#    - Docker Compose v1.28+
+#
+# 2. Create .env file with configuration:
+#    VLLM_MODEL=meta-llama/Llama-2-13b-chat-hf
+#    VLLM_TENSOR_PARALLEL=1
+#    VLLM_GPU_MEMORY=0.9
+#    VLLM_MAX_LEN=4096
+#    HF_TOKEN=your_huggingface_token  # For gated models
+#
+# 3. Create network:
+#    docker network create ai-orchestrator-network
+#
+# 4. (Optional) Download models first:
+#    docker-compose -f docker-compose.vllm.yml --profile download up vllm-model-downloader
+#
+# 5. Start vLLM server:
+#    docker-compose -f docker-compose.vllm.yml up -d
+#
+# 6. Verify server is running:
+#    curl http://localhost:8001/v1/models
+#
+# 7. Test completion:
+#    curl http://localhost:8001/v1/chat/completions \
+#      -H "Content-Type: application/json" \
+#      -d '{"model": "meta-llama/Llama-2-13b-chat-hf", "messages": [{"role": "user", "content": "Hello!"}]}'
+#
+# 8. Enable in AI Orchestrator:
+#    - Set VLLM_ENABLED=true in .env
+#    - Set VLLM_BASE_URL=http://localhost:8001
+#    - Restart orchestrator: docker-compose restart ai-orchestrator
+#
+# Models tested:
+#   - meta-llama/Llama-2-13b-chat-hf (general chat)
+#   - codellama/CodeLlama-13b-Instruct-hf (code generation)
+#   - mistralai/Mistral-7B-Instruct-v0.2 (general instruct)
+#
+# GPU Requirements:
+#   - Llama 2 13B: ~13GB VRAM (FP16)
+#   - CodeLlama 13B: ~13GB VRAM (FP16)
+#   - Mistral 7B: ~7GB VRAM (FP16)
+#
+# Performance Tips:
+#   - Use --tensor-parallel-size=2 for multi-GPU
+#   - Increase --gpu-memory-utilization to 0.95 for max throughput
+#   - Enable --enable-prefix-caching for repeated prompts
+#   - Use --swap-space for CPU offloading (slower)

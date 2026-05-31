@@ -1,0 +1,122 @@
+# Developer Profile - Detailed Configuration
+# Optimized for development and code-related queries
+
+profile_name: developer
+description: "Development-focused routing with code generation emphasis"
+version: "1.0"
+
+# Primary provider selection
+default_providers:
+  - claude_code
+  - gemini
+  - local
+
+# Intent-specific routing
+intent_mapping:
+  code_generation:
+    primary: claude_code
+    confidence_threshold: 0.8
+    cache_ttl: 3600
+    system_prompt_modifier: |
+      Focus on clean, production-ready code with best practices.
+      Include inline comments for complex logic.
+
+  code_review:
+    primary: claude_code
+    secondary: local
+    confidence_threshold: 0.75
+    system_prompt_modifier: |
+      Provide detailed code review with specific suggestions.
+      Check for security vulnerabilities, performance issues, and maintainability.
+
+  architecture_design:
+    primary: gemini
+    secondary: chatgpt
+    confidence_threshold: 0.7
+    system_prompt_modifier: |
+      Focus on scalable, maintainable architecture patterns.
+      Consider trade-offs and provide diagrams when helpful.
+
+  debugging:
+    blend:
+      providers:
+        - claude_code
+        - local
+      strategy: sequential
+    confidence_threshold: 0.8
+    system_prompt_modifier: |
+      Systematically analyze the error. Check logs, stack traces, and context.
+      Provide step-by-step debugging approach.
+
+  documentation:
+    primary: chatgpt
+    secondary: gemini
+    confidence_threshold: 0.6
+
+  testing:
+    primary: claude_code
+    secondary: local
+    confidence_threshold: 0.75
+    system_prompt_modifier: |
+      Write comprehensive tests with good coverage.
+      Include edge cases and error conditions.
+
+  devops:
+    primary: claude_code
+    fallback:
+      - gemini
+      - local
+    confidence_threshold: 0.85
+
+  refactoring:
+    primary: claude_code
+    secondary: gemini
+    confidence_threshold: 0.8
+    system_prompt_modifier: |
+      Improve code quality while maintaining functionality.
+      Apply SOLID principles and design patterns where appropriate.
+
+# Fallback chain when primary fails
+fallback_chain:
+  - claude_code
+  - gemini
+  - local
+  - chatgpt
+
+# Profile-specific settings
+settings:
+  prefer_free_tier: true
+  max_latency_ms: 5000
+  cost_weight: 0.3
+  quality_weight: 0.7
+
+  # Enable code-specific features
+  code_context_extraction: true
+  language_detection: true
+  dependency_analysis: true
+
+  # Caching behavior
+  cache_code_patterns: true
+  cache_ttl_default: 1800  # 30 minutes
+
+# Context signals that activate this profile
+activation_signals:
+  keywords:
+    - "write code"
+    - "implement"
+    - "debug"
+    - "refactor"
+    - "create function"
+    - "build api"
+    - "deploy"
+
+  explicit_mentions:
+    - "@claude_code"
+    - "@developer"
+
+  file_extensions:
+    - .py
+    - .js
+    - .ts
+    - .java
+    - .go

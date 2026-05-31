@@ -1,0 +1,242 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="freeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#064e3b"/>
+      <stop offset="100%" style="stop-color:#065f46"/>
+    </linearGradient>
+    <linearGradient id="paidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#451a03"/>
+      <stop offset="100%" style="stop-color:#78350f"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#1e40af"/>
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2e1065"/>
+      <stop offset="100%" style="stop-color:#4c1d95"/>
+    </linearGradient>
+    <linearGradient id="qualityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1c1917"/>
+      <stop offset="100%" style="stop-color:#292524"/>
+    </linearGradient>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#ef4444"/>
+    </marker>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid -->
+  <g opacity="0.04" stroke="#94a3b8" stroke-width="1">
+    <line x1="0" y1="104" x2="1200" y2="104"/>
+    <line x1="0" y1="208" x2="1200" y2="208"/>
+    <line x1="0" y1="312" x2="1200" y2="312"/>
+    <line x1="0" y1="416" x2="1200" y2="416"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/>
+    <line x1="0" y1="624" x2="1200" y2="624"/>
+    <line x1="240" y1="0" x2="240" y2="720"/>
+    <line x1="480" y1="0" x2="480" y2="720"/>
+    <line x1="720" y1="0" x2="720" y2="720"/>
+    <line x1="960" y1="0" x2="960" y2="720"/>
+  </g>
+
+  <!-- Title -->
+  <text x="60" y="54" font-size="26" font-weight="700" fill="#f8fafc" letter-spacing="-0.5">AI Orchestrator</text>
+  <text x="60" y="80" font-size="14" fill="#94a3b8" letter-spacing="0.5">Cost-First LLM Routing Architecture</text>
+
+  <!-- Metric callouts -->
+  <g transform="translate(760, 32)">
+    <rect x="0" y="0" width="130" height="52" rx="8" fill="#0f2744" stroke="#1d4ed8" stroke-width="1"/>
+    <text x="65" y="18" font-size="9" fill="#60a5fa" text-anchor="middle" letter-spacing="1" font-weight="600">FREE TIER USAGE</text>
+    <text x="65" y="41" font-size="28" font-weight="800" fill="#3b82f6" text-anchor="middle" filter="url(#glow)">76%</text>
+  </g>
+  <g transform="translate(905, 32)">
+    <rect x="0" y="0" width="130" height="52" rx="8" fill="#0a2818" stroke="#059669" stroke-width="1"/>
+    <text x="65" y="18" font-size="9" fill="#34d399" text-anchor="middle" letter-spacing="1" font-weight="600">CACHE COST SAVING</text>
+    <text x="65" y="41" font-size="28" font-weight="800" fill="#10b981" text-anchor="middle" filter="url(#glow)">60%</text>
+  </g>
+  <g transform="translate(1050, 32)">
+    <rect x="0" y="0" width="130" height="52" rx="8" fill="#1a0a2e" stroke="#7c3aed" stroke-width="1"/>
+    <text x="65" y="18" font-size="9" fill="#a78bfa" text-anchor="middle" letter-spacing="1" font-weight="600">INTENT LATENCY</text>
+    <text x="65" y="41" font-size="28" font-weight="800" fill="#8b5cf6" text-anchor="middle" filter="url(#glow)">&lt;100ms</text>
+  </g>
+
+  <!-- ── ROW 1: Request flow ── -->
+  <g transform="translate(60, 120)">
+    <rect x="0" y="0" width="160" height="56" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+    <text x="80" y="22" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="0.5">INCOMING</text>
+    <text x="80" y="41" font-size="15" font-weight="700" fill="#f1f5f9" text-anchor="middle">Request</text>
+  </g>
+  <line x1="220" y1="148" x2="278" y2="148" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <g transform="translate(280, 110)">
+    <rect x="0" y="0" width="190" height="76" rx="10" fill="url(#blueGrad)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="95" y="20" font-size="10" fill="#93c5fd" text-anchor="middle" letter-spacing="0.5" font-weight="600">INTENT CLASSIFIER</text>
+    <text x="95" y="39" font-size="13" font-weight="700" fill="#f1f5f9" text-anchor="middle">all-MiniLM-L6-v2</text>
+    <text x="95" y="57" font-size="10" fill="#93c5fd" text-anchor="middle">384-dim embeddings · local · ~40ms</text>
+  </g>
+  <line x1="470" y1="148" x2="528" y2="148" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <g transform="translate(530, 110)">
+    <rect x="0" y="0" width="190" height="76" rx="10" fill="url(#blueGrad)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="95" y="20" font-size="10" fill="#93c5fd" text-anchor="middle" letter-spacing="0.5" font-weight="600">SEMANTIC CACHE</text>
+    <text x="95" y="39" font-size="13" font-weight="700" fill="#f1f5f9" text-anchor="middle">Redis · 0.85 threshold</text>
+    <text x="95" y="57" font-size="10" fill="#93c5fd" text-anchor="middle">cosine similarity · TTL expiry · 1.5ms avg</text>
+  </g>
+  <line x1="720" y1="148" x2="778" y2="148" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <g transform="translate(780, 110)">
+    <rect x="0" y="0" width="190" height="76" rx="10" fill="url(#blueGrad)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="95" y="20" font-size="10" fill="#93c5fd" text-anchor="middle" letter-spacing="0.5" font-weight="600">CONTEXT-AWARE ROUTER</text>
+    <text x="95" y="39" font-size="13" font-weight="700" fill="#f1f5f9" text-anchor="middle">routing_weights.yaml</text>
+    <text x="95" y="57" font-size="10" fill="#93c5fd" text-anchor="middle">developer · incident · production profiles</text>
+  </g>
+  <text x="620" y="204" font-size="9" fill="#10b981" text-anchor="middle" font-weight="600">CACHE HIT → return immediately</text>
+
+  <!-- Divider 1 -->
+  <line x1="60" y1="224" x2="1140" y2="224" stroke="#1e3a5f" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="600" y="240" font-size="9" fill="#475569" text-anchor="middle" letter-spacing="1.5" font-weight="600">PROVIDER SELECTION — FREE FIRST</text>
+
+  <!-- Arrows from router down to provider tiers -->
+  <line x1="875" y1="186" x2="875" y2="250" stroke="#3b82f6" stroke-width="2"/>
+  <line x1="875" y1="250" x2="300" y2="250" stroke="#3b82f6" stroke-width="2"/>
+  <line x1="300" y1="250" x2="300" y2="264" stroke="#10b981" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <line x1="875" y1="250" x2="1000" y2="250" stroke="#3b82f6" stroke-width="2"/>
+  <line x1="1000" y1="250" x2="1000" y2="264" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+  <!-- ── FREE TIER ── -->
+  <g transform="translate(60, 266)">
+    <rect x="0" y="0" width="560" height="140" rx="12" fill="url(#freeGrad)" stroke="#059669" stroke-width="1.5"/>
+    <text x="280" y="22" font-size="10" fill="#34d399" text-anchor="middle" letter-spacing="1.5" font-weight="700">FREE TIER — 76% OF REQUESTS</text>
+    <rect x="16" y="34" width="154" height="90" rx="8" fill="#022c22" stroke="#065f46" stroke-width="1"/>
+    <text x="93" y="55" font-size="11" font-weight="700" fill="#34d399" text-anchor="middle">Local / Ollama</text>
+    <text x="93" y="72" font-size="9" fill="#6ee7b7" text-anchor="middle">DeepSeek · Llama · Mistral</text>
+    <text x="93" y="88" font-size="9" fill="#6ee7b7" text-anchor="middle">Unlimited · Privacy-first</text>
+    <text x="93" y="104" font-size="9" fill="#6ee7b7" text-anchor="middle">Incident analysis · Logs</text>
+    <rect x="28" y="112" width="130" height="6" rx="3" fill="#022c22"/>
+    <rect x="28" y="112" width="130" height="6" rx="3" fill="#10b981" opacity="0.9"/>
+    <rect x="186" y="34" width="154" height="90" rx="8" fill="#022c22" stroke="#065f46" stroke-width="1"/>
+    <text x="263" y="55" font-size="11" font-weight="700" fill="#34d399" text-anchor="middle">DeepSeek</text>
+    <text x="263" y="72" font-size="9" fill="#6ee7b7" text-anchor="middle">Local inference</text>
+    <text x="263" y="88" font-size="9" fill="#6ee7b7" text-anchor="middle">Code · Reasoning</text>
+    <text x="263" y="104" font-size="9" fill="#6ee7b7" text-anchor="middle">Unlimited · Free</text>
+    <rect x="198" y="112" width="130" height="6" rx="3" fill="#022c22"/>
+    <rect x="198" y="112" width="110" height="6" rx="3" fill="#10b981" opacity="0.75"/>
+    <rect x="356" y="34" width="188" height="90" rx="8" fill="#022c22" stroke="#065f46" stroke-width="1"/>
+    <text x="450" y="55" font-size="11" font-weight="700" fill="#34d399" text-anchor="middle">Gemini</text>
+    <text x="450" y="72" font-size="9" fill="#6ee7b7" text-anchor="middle">Free tier · paid beyond limit</text>
+    <text x="450" y="88" font-size="9" fill="#6ee7b7" text-anchor="middle">Prompt optimization</text>
+    <text x="450" y="104" font-size="9" fill="#6ee7b7" text-anchor="middle">Meta-prompting</text>
+    <rect x="368" y="112" width="164" height="6" rx="3" fill="#022c22"/>
+    <rect x="368" y="112" width="120" height="6" rx="3" fill="#10b981" opacity="0.6"/>
+  </g>
+
+  <!-- ── PAID TIER ── -->
+  <g transform="translate(660, 266)">
+    <rect x="0" y="0" width="480" height="140" rx="12" fill="url(#paidGrad)" stroke="#d97706" stroke-width="1.5"/>
+    <text x="240" y="22" font-size="10" fill="#fbbf24" text-anchor="middle" letter-spacing="1.5" font-weight="700">PAID TIER — 24% OF REQUESTS</text>
+    <rect x="16" y="34" width="210" height="90" rx="8" fill="#3b1500" stroke="#92400e" stroke-width="1"/>
+    <text x="113" y="55" font-size="11" font-weight="700" fill="#fbbf24" text-anchor="middle">ChatGPT</text>
+    <text x="113" y="72" font-size="9" fill="#fde68a" text-anchor="middle">GPT-4o · UI/UX · Workflows</text>
+    <text x="113" y="88" font-size="9" fill="#fde68a" text-anchor="middle">Reports · Dashboard design</text>
+    <text x="113" y="104" font-size="9" fill="#fde68a" text-anchor="middle">High complexity tasks</text>
+    <rect x="28" y="112" width="186" height="6" rx="3" fill="#3b1500"/>
+    <rect x="28" y="112" width="80" height="6" rx="3" fill="#f59e0b" opacity="0.8"/>
+    <rect x="242" y="34" width="222" height="90" rx="8" fill="#3b1500" stroke="#92400e" stroke-width="1"/>
+    <text x="353" y="55" font-size="11" font-weight="700" fill="#fbbf24" text-anchor="middle">Claude</text>
+    <text x="353" y="72" font-size="9" fill="#fde68a" text-anchor="middle">Sonnet 4.6 · Analysis · Reasoning</text>
+    <text x="353" y="88" font-size="9" fill="#fde68a" text-anchor="middle">Large context · Code gen</text>
+    <text x="353" y="104" font-size="9" fill="#fde68a" text-anchor="middle">Frontier capability required</text>
+    <rect x="254" y="112" width="198" height="6" rx="3" fill="#3b1500"/>
+    <rect x="254" y="112" width="60" height="6" rx="3" fill="#f59e0b" opacity="0.6"/>
+  </g>
+
+  <!-- ── Arrows down to Quality Validator ── -->
+  <line x1="340" y1="406" x2="340" y2="432" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="900" y1="406" x2="900" y2="432" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- ── QUALITY VALIDATOR ── -->
+  <g transform="translate(60, 434)">
+    <rect x="0" y="0" width="1080" height="72" rx="12" fill="url(#qualityGrad)" stroke="#44403c" stroke-width="1.5"/>
+    <text x="540" y="20" font-size="10" fill="#a8a29e" text-anchor="middle" letter-spacing="1.5" font-weight="700">QUALITY VALIDATOR — src/core/quality.py · orchestrator.py:349</text>
+    <rect x="20" y="30" width="230" height="30" rx="6" fill="#1c1917" stroke="#57534e" stroke-width="1"/>
+    <text x="135" y="50" font-size="9" fill="#d6d3d1" text-anchor="middle">coherence · completeness · structure</text>
+    <rect x="266" y="30" width="230" height="30" rx="6" fill="#1c1917" stroke="#57534e" stroke-width="1"/>
+    <text x="381" y="50" font-size="9" fill="#d6d3d1" text-anchor="middle">failure pattern detection</text>
+    <rect x="512" y="30" width="230" height="30" rx="6" fill="#1c1917" stroke="#57534e" stroke-width="1"/>
+    <text x="627" y="50" font-size="9" fill="#d6d3d1" text-anchor="middle">confidence threshold gate</text>
+    <rect x="758" y="30" width="302" height="30" rx="6" fill="#3b0000" stroke="#7f1d1d" stroke-width="1"/>
+    <text x="909" y="43" font-size="9" fill="#fca5a5" text-anchor="middle" font-weight="600">FAIL → auto-fallback to next provider</text>
+    <text x="909" y="55" font-size="8" fill="#ef4444" text-anchor="middle">↺ retry chain: Local → Gemini → ChatGPT → Claude</text>
+  </g>
+
+  <!-- Arrow: Quality Validator pass → Collaboration -->
+  <line x1="340" y1="506" x2="340" y2="528" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Divider 2 -->
+  <line x1="60" y1="528" x2="1140" y2="528" stroke="#1e3a5f" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="600" y="544" font-size="9" fill="#475569" text-anchor="middle" letter-spacing="1.5" font-weight="600">MULTI-AGENT COLLABORATION — WHEN NEEDED</text>
+
+  <!-- ── COLLABORATION MANAGER ── -->
+  <g transform="translate(60, 552)">
+    <rect x="0" y="0" width="1080" height="100" rx="12" fill="url(#purpleGrad)" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="540" y="22" font-size="10" fill="#c4b5fd" text-anchor="middle" letter-spacing="1.5" font-weight="700">COLLABORATION MANAGER — src/core/collaboration_manager.py</text>
+    <g transform="translate(20, 32)">
+      <rect x="0" y="0" width="152" height="52" rx="6" fill="#1a0a3e" stroke="#5b21b6" stroke-width="1"/>
+      <text x="76" y="19" font-size="10" font-weight="700" fill="#a78bfa" text-anchor="middle">Sequential</text>
+      <text x="76" y="35" font-size="9" fill="#c4b5fd" text-anchor="middle">A → B → C</text>
+      <text x="76" y="49" font-size="9" fill="#7c6fcd" text-anchor="middle">full context chain</text>
+    </g>
+    <g transform="translate(188, 32)">
+      <rect x="0" y="0" width="152" height="52" rx="6" fill="#1a0a3e" stroke="#5b21b6" stroke-width="1"/>
+      <text x="76" y="19" font-size="10" font-weight="700" fill="#a78bfa" text-anchor="middle">Parallel</text>
+      <text x="76" y="35" font-size="9" fill="#c4b5fd" text-anchor="middle">A + B + C → merge</text>
+      <text x="76" y="49" font-size="9" fill="#7c6fcd" text-anchor="middle">simultaneous execution</text>
+    </g>
+    <g transform="translate(356, 32)">
+      <rect x="0" y="0" width="152" height="52" rx="6" fill="#2d0a3e" stroke="#7c3aed" stroke-width="2"/>
+      <text x="76" y="19" font-size="10" font-weight="700" fill="#e879f9" text-anchor="middle">★ Debate</text>
+      <text x="76" y="35" font-size="9" fill="#f0abfc" text-anchor="middle">competing proposals</text>
+      <text x="76" y="49" font-size="9" fill="#c084fc" text-anchor="middle">consensus synthesis</text>
+    </g>
+    <g transform="translate(524, 32)">
+      <rect x="0" y="0" width="152" height="52" rx="6" fill="#1a0a3e" stroke="#5b21b6" stroke-width="1"/>
+      <text x="76" y="19" font-size="10" font-weight="700" fill="#a78bfa" text-anchor="middle">Hierarchical</text>
+      <text x="76" y="35" font-size="9" fill="#c4b5fd" text-anchor="middle">coordinator → delegates</text>
+      <text x="76" y="49" font-size="9" fill="#7c6fcd" text-anchor="middle">task decomposition</text>
+    </g>
+    <g transform="translate(692, 32)">
+      <rect x="0" y="0" width="152" height="52" rx="6" fill="#1a0a3e" stroke="#5b21b6" stroke-width="1"/>
+      <text x="76" y="19" font-size="10" font-weight="700" fill="#a78bfa" text-anchor="middle">Specialized</text>
+      <text x="76" y="35" font-size="9" fill="#c4b5fd" text-anchor="middle">per-aspect agents</text>
+      <text x="76" y="49" font-size="9" fill="#7c6fcd" text-anchor="middle">independent scopes</text>
+    </g>
+    <g transform="translate(860, 32)">
+      <rect x="0" y="0" width="200" height="52" rx="6" fill="#1a0a3e" stroke="#5b21b6" stroke-width="1"/>
+      <text x="100" y="19" font-size="10" font-weight="700" fill="#a78bfa" text-anchor="middle">Pipeline</text>
+      <text x="100" y="35" font-size="9" fill="#c4b5fd" text-anchor="middle">stage transforms</text>
+      <text x="100" y="49" font-size="9" fill="#7c6fcd" text-anchor="middle">1.5s/hop handoff</text>
+    </g>
+  </g>
+
+  <!-- Footer -->
+  <rect x="0" y="683" width="1200" height="37" fill="#0a0f1e" opacity="0.8"/>
+  <text x="60" y="705" font-size="10" fill="#475569">Python 3.13 · FastAPI · Redis · MongoDB · sentence-transformers · OpenTelemetry · React</text>
+  <text x="1140" y="705" font-size="10" fill="#334155" text-anchor="end">github.com/[repo]</text>
+</svg>

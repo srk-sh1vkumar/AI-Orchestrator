@@ -1,0 +1,143 @@
+# Incident Analysis Profile - Detailed Configuration
+# Privacy-first incident analysis and root cause investigation
+
+profile_name: incident_analysis
+description: "Privacy-focused incident analysis with local model preference"
+version: "1.0"
+
+# Primary provider selection - prefer local for privacy
+default_providers:
+  - local
+  - gemini
+  - chatgpt
+
+# Intent-specific routing
+intent_mapping:
+  log_analysis:
+    primary: local
+    privacy: true
+    no_cache: true
+    confidence_threshold: 0.85
+    system_prompt_modifier: |
+      Analyze logs for errors, patterns, and anomalies.
+      Focus on timestamps, error codes, and correlations.
+      Never expose sensitive data in responses.
+
+  metrics_analysis:
+    primary: gemini
+    secondary: local
+    cache_ttl: 300
+    confidence_threshold: 0.7
+    system_prompt_modifier: |
+      Analyze metrics for trends, anomalies, and correlations.
+      Identify baseline deviations and potential causes.
+
+  root_cause_analysis:
+    blend:
+      providers:
+        - local
+        - gemini
+      strategy: parallel
+      merge_strategy: combined
+    confidence_threshold: 0.8
+    system_prompt_modifier: |
+      Perform systematic root cause analysis.
+      Use 5-whys methodology. Consider timeline, changes, and dependencies.
+
+  incident_report:
+    primary: chatgpt
+    context_from:
+      - local
+      - gemini
+    confidence_threshold: 0.75
+    system_prompt_modifier: |
+      Create clear, structured incident report.
+      Include timeline, impact, root cause, and remediation.
+
+  postmortem:
+    blend:
+      providers:
+        - local
+        - chatgpt
+      strategy: sequential
+    confidence_threshold: 0.8
+    system_prompt_modifier: |
+      Write comprehensive postmortem with lessons learned.
+      Focus on systemic improvements, not blame.
+
+  security_analysis:
+    primary: local
+    privacy: true
+    no_external: true
+    confidence_threshold: 0.9
+    system_prompt_modifier: |
+      Analyze for security implications with full privacy.
+      Never send sensitive security data externally.
+
+  performance_analysis:
+    primary: local
+    secondary: gemini
+    confidence_threshold: 0.75
+    system_prompt_modifier: |
+      Identify performance bottlenecks and optimization opportunities.
+      Consider resource utilization, latency, and throughput.
+
+  alert_triage:
+    primary: local
+    fallback:
+      - gemini
+    confidence_threshold: 0.8
+    system_prompt_modifier: |
+      Quickly assess alert severity and required action.
+      Prioritize by impact and urgency.
+
+# Fallback chain
+fallback_chain:
+  - local
+  - gemini
+  - chatgpt
+  - claude
+
+# Profile-specific settings
+settings:
+  privacy_mode: true
+  prefer_local: true
+  max_latency_ms: 10000
+  cost_weight: 0.1
+  reliability_weight: 0.9
+
+  # Privacy features
+  redact_pii: true
+  no_external_logs: true
+  local_first: true
+
+  # Incident-specific features
+  timeline_extraction: true
+  correlation_analysis: true
+  impact_assessment: true
+
+  # Caching behavior
+  cache_enabled: false  # Sensitive data
+  ephemeral_context: true
+
+# Context signals that activate this profile
+activation_signals:
+  keywords:
+    - "incident"
+    - "outage"
+    - "analyze log"
+    - "root cause"
+    - "postmortem"
+    - "alert"
+    - "investigate"
+    - "failure"
+
+  explicit_mentions:
+    - "@local"
+    - "@incident"
+    - "@privacy"
+
+  context_indicators:
+    - contains_logs: true
+    - mentions_error_codes: true
+    - mentions_timestamps: true

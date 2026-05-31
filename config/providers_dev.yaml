@@ -1,0 +1,191 @@
+# Environment-Specific Provider Configuration
+# Enhancement 017: Production Architecture
+#
+# This file contains development environment provider configurations
+# For production, use providers_prod.yaml with appropriate credentials
+
+environment: development
+
+# Provider Configurations
+providers:
+  claude_code:
+    enabled: false  # Disabled in dev (API cost)
+    priority: low
+    tier: paid
+    cost_per_1k_tokens: 0.015
+    rate_limit:
+      requests_per_minute: 50
+      tokens_per_minute: 40000
+    health_check:
+      enabled: true
+      interval_seconds: 300
+    notes: "Use only for critical code generation in dev"
+
+  claude:
+    enabled: false  # Disabled in dev (API cost)
+    priority: low
+    tier: paid
+    cost_per_1k_tokens: 0.015
+    rate_limit:
+      requests_per_minute: 50
+      tokens_per_minute: 40000
+
+  chatgpt:
+    enabled: true  # Available but low priority in dev
+    priority: medium
+    tier: paid
+    cost_per_1k_tokens: 0.002
+    rate_limit:
+      requests_per_minute: 60
+      tokens_per_minute: 90000
+    health_check:
+      enabled: true
+      interval_seconds: 300
+
+  gemini:
+    enabled: true
+    priority: high  # Free tier - high priority in dev
+    tier: free
+    cost_per_1k_tokens: 0.0
+    rate_limit:
+      requests_per_day: 1500
+      requests_per_minute: 60
+    health_check:
+      enabled: true
+      interval_seconds: 180
+    notes: "Primary free provider for dev/testing"
+
+  local:
+    enabled: true
+    priority: highest  # Unlimited free - highest priority in dev
+    tier: free
+    backend: ollama
+    cost_per_1k_tokens: 0.0
+    models:
+      - name: llama2:7b
+        use_case: general
+      - name: codellama:7b
+        use_case: code
+    health_check:
+      enabled: true
+      interval_seconds: 60
+      endpoint: http://localhost:11434/api/tags
+    notes: "Primary dev provider - unlimited, fast, privacy-friendly"
+
+  deepseek:
+    enabled: true
+    priority: highest  # Specialized for code tasks
+    tier: free
+    backend: ollama
+    cost_per_1k_tokens: 0.0
+    models:
+      - name: deepseek-coder:6.7b
+        use_case: code_generation
+    health_check:
+      enabled: true
+      interval_seconds: 60
+      endpoint: http://localhost:11434/api/tags
+    notes: "Best free code generation model"
+
+  vllm:
+    enabled: false  # Enable after vLLM server is running
+    priority: highest  # Highest for production workloads
+    tier: free
+    backend: vllm
+    cost_per_1k_tokens: 0.0
+    endpoint: http://localhost:8001
+    models:
+      - name: meta-llama/Llama-2-13b-chat-hf
+        use_case: general
+        context_window: 4096
+        max_tokens: 4096
+      - name: codellama/CodeLlama-13b-Instruct-hf
+        use_case: code_generation
+        context_window: 16384
+        max_tokens: 4096
+      - name: mistralai/Mistral-7B-Instruct-v0.2
+        use_case: general
+        context_window: 8192
+        max_tokens: 4096
+    rate_limit:
+      requests_per_minute: 120  # Higher throughput than Ollama
+      tokens_per_minute: 500000
+    health_check:
+      enabled: true
+      interval_seconds: 60
+      endpoint: http://localhost:8001/v1/models
+      timeout_seconds: 5
+    notes: "High-performance local LLM with PagedAttention (Phase 1) - Requires GPU"
+
+# Development Routing Strategy
+routing:
+  # Cost-first routing in dev
+  prefer_free: true
+  fallback_to_paid: true  # But allow paid as fallback
+
+  # Provider selection order for dev
+  default_chain:
+    - deepseek  # Code tasks
+    - local     # General tasks
+    - gemini    # Free tier backup
+    - chatgpt   # Paid fallback (low cost)
+    - claude_code  # Last resort (high cost)
+
+  # Intent-specific overrides
+  intent_overrides:
+    code_generation:
+      - deepseek
+      - local
+      - gemini
+
+    incident_analysis:
+      - local  # Privacy-first
+      - gemini
+
+    ui_design:
+      - gemini
+      - chatgpt  # If quality matters
+
+    architecture:
+      - gemini
+      - local
+
+# Development Features
+features:
+  # Enable verbose logging in dev
+  verbose_logging: true
+
+  # Enable debug mode
+  debug_mode: true
+
+  # Mock external services
+  mock_github: false
+  mock_docker: false
+
+  # Metrics
+  prometheus_enabled: true
+  prometheus_port: 9090
+
+  # Tracing
+  tracing_enabled: true
+  tracing_sample_rate: 1.0  # 100% in dev
+
+  # State persistence
+  mongodb_enabled: true
+  mongodb_connection: mongodb://localhost:27017
+
+  # Caching
+  redis_enabled: false  # Optional in dev
+  redis_connection: redis://localhost:6379
+
+# Development Limits
+limits:
+  max_concurrent_requests: 10
+  max_tokens_per_request: 4000
+  request_timeout_seconds: 120
+
+# Monitoring
+monitoring:
+  health_check_interval: 60
+  metrics_port: 8000
+  log_level: DEBUG

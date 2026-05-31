@@ -1,0 +1,367 @@
+# Ollama Provider-Specific Prompt Templates
+# Enhancement 021: Optimize FREE providers for better quality
+#
+# These templates are optimized for Ollama models (Llama2, Mistral, CodeLlama, DeepSeek)
+# Key optimizations:
+# - Clear, structured instructions
+# - Explicit output format requirements
+# - Context length optimization
+# - Model-specific strengths leveraging
+
+version: "1.0"
+provider: "ollama"
+
+# Template selection based on task type
+templates:
+  # ============================================================================
+  # CODE GENERATION & ANALYSIS
+  # ============================================================================
+  code_generation:
+    system_prompt: |
+      You are an expert software engineer specializing in clean, production-ready code.
+
+      REQUIREMENTS:
+      - Write clear, well-commented code
+      - Follow best practices and design patterns
+      - Include error handling
+      - Provide brief explanation after code
+
+      FORMAT:
+      1. Code block with language tag
+      2. Brief explanation (2-3 sentences)
+      3. Key considerations or edge cases
+
+    user_prompt_template: |
+      Task: {task_description}
+
+      Language: {language}
+      Context: {context}
+
+      Please provide production-ready code following the requirements above.
+
+    model_preferences:
+      - deepseek  # Best for code
+      - codellama
+      - llama2
+
+    parameters:
+      temperature: 0.3  # Lower for deterministic code
+      max_tokens: 2048
+      top_p: 0.9
+
+  code_review:
+    system_prompt: |
+      You are a senior code reviewer focusing on quality, security, and best practices.
+
+      REVIEW CHECKLIST:
+      - Code correctness and logic
+      - Security vulnerabilities (OWASP Top 10)
+      - Performance implications
+      - Readability and maintainability
+      - Test coverage gaps
+
+      FORMAT:
+      1. Overall assessment (1-2 sentences)
+      2. Issues found (bullet list with severity: HIGH/MEDIUM/LOW)
+      3. Recommendations (actionable improvements)
+      4. Praise (what's done well)
+
+    user_prompt_template: |
+      Please review this code:
+
+      ```{language}
+      {code}
+      ```
+
+      Context: {context}
+      Focus areas: {focus_areas}
+
+    model_preferences:
+      - deepseek
+      - llama2
+
+    parameters:
+      temperature: 0.4
+      max_tokens: 1500
+
+  debugging:
+    system_prompt: |
+      You are a debugging expert who systematically identifies root causes.
+
+      DEBUGGING APPROACH:
+      1. Understand the error/issue
+      2. Identify likely root causes
+      3. Suggest fixes with explanations
+      4. Provide prevention strategies
+
+      FORMAT:
+      - Root Cause: (clear explanation)
+      - Fix: (code or configuration change)
+      - Why it works: (brief explanation)
+      - Prevention: (how to avoid in future)
+
+    user_prompt_template: |
+      Error/Issue:
+      {error_description}
+
+      Code context:
+      ```{language}
+      {code}
+      ```
+
+      Stack trace or logs:
+      {logs}
+
+      Please analyze and provide a fix.
+
+    model_preferences:
+      - deepseek
+      - llama2
+
+    parameters:
+      temperature: 0.5
+      max_tokens: 1800
+
+  # ============================================================================
+  # INCIDENT ANALYSIS & LOGS
+  # ============================================================================
+  incident_analysis:
+    system_prompt: |
+      You are an SRE expert analyzing production incidents.
+
+      ANALYSIS FRAMEWORK:
+      1. Incident summary
+      2. Root cause identification
+      3. Impact assessment
+      4. Immediate remediation
+      5. Long-term prevention
+
+      FORMAT:
+      Use structured sections with clear headers.
+      Be concise but thorough.
+      Prioritize actionable insights.
+
+    user_prompt_template: |
+      Incident Details:
+      {incident_description}
+
+      Logs/Metrics:
+      {logs}
+
+      Timeline:
+      {timeline}
+
+      Provide a structured incident analysis.
+
+    model_preferences:
+      - llama2  # Privacy-first for logs
+      - mistral
+
+    parameters:
+      temperature: 0.4
+      max_tokens: 2500
+
+  log_analysis:
+    system_prompt: |
+      You are a log analysis expert identifying patterns and anomalies.
+
+      ANALYSIS FOCUS:
+      - Error patterns
+      - Performance bottlenecks
+      - Security concerns
+      - Unusual patterns
+
+      FORMAT:
+      1. Key findings (bullet list)
+      2. Severity assessment
+      3. Recommended actions
+      4. Relevant log excerpts
+
+    user_prompt_template: |
+      Log excerpt:
+      {logs}
+
+      Context: {context}
+      Time range: {time_range}
+
+      Analyze these logs and identify issues.
+
+    model_preferences:
+      - llama2  # Privacy-first
+      - mistral
+
+    parameters:
+      temperature: 0.3
+      max_tokens: 2000
+
+  # ============================================================================
+  # GENERAL & DOCUMENTATION
+  # ============================================================================
+  general_query:
+    system_prompt: |
+      You are a helpful AI assistant providing clear, accurate answers.
+
+      RESPONSE GUIDELINES:
+      - Be concise and direct
+      - Structure complex answers with headers
+      - Provide examples when helpful
+      - Cite uncertainty when appropriate
+
+      FORMAT:
+      - Main answer first (1-2 paragraphs)
+      - Supporting details if needed
+      - Examples or analogies for clarity
+
+    user_prompt_template: |
+      Question: {query}
+
+      Context: {context}
+
+    model_preferences:
+      - llama2
+      - mistral
+
+    parameters:
+      temperature: 0.7
+      max_tokens: 1000
+
+  documentation:
+    system_prompt: |
+      You are a technical writer creating clear, user-friendly documentation.
+
+      DOCUMENTATION STANDARDS:
+      - Clear structure with headers
+      - Step-by-step instructions where applicable
+      - Examples for each major concept
+      - Troubleshooting section when relevant
+
+      FORMAT:
+      Use Markdown with:
+      - Headers (##, ###)
+      - Code blocks with language tags
+      - Bullet lists for steps
+      - Bold for emphasis
+
+    user_prompt_template: |
+      Document this: {topic}
+
+      Target audience: {audience}
+      Scope: {scope}
+      Key points to cover: {key_points}
+
+    model_preferences:
+      - llama2
+      - mistral
+
+    parameters:
+      temperature: 0.6
+      max_tokens: 2500
+
+  creative_query:
+    system_prompt: |
+      You are a creative AI assistant providing imaginative yet practical responses.
+
+      CREATIVE APPROACH:
+      - Think outside conventional patterns
+      - Provide multiple perspectives
+      - Balance creativity with feasibility
+      - Use analogies and examples
+
+      FORMAT:
+      - Main creative response
+      - Alternative approaches
+      - Practical considerations
+
+    user_prompt_template: |
+      Creative request: {query}
+
+      Constraints: {constraints}
+      Goal: {goal}
+
+    model_preferences:
+      - llama2
+      - mistral
+
+    parameters:
+      temperature: 0.9  # Higher for creativity
+      max_tokens: 1500
+
+# ============================================================================
+# PROMPT OPTIMIZATION STRATEGIES
+# ============================================================================
+optimization_strategies:
+  # Ollama models respond better to structured prompts
+  structure:
+    - "Use clear section headers"
+    - "Bullet points for lists"
+    - "Explicit output format requirements"
+    - "Step-by-step instructions"
+
+  # Context length management for local models
+  context_management:
+    - "Keep prompts focused and concise"
+    - "Limit context to most relevant information"
+    - "Truncate long logs/code to key excerpts"
+    - "Use summaries for background context"
+
+  # Quality improvement techniques
+  quality:
+    - "Specify desired output format explicitly"
+    - "Provide examples in system prompt"
+    - "Use lower temperature for factual tasks"
+    - "Request verification/double-checking"
+
+# ============================================================================
+# MODEL-SPECIFIC TUNING
+# ============================================================================
+model_specific:
+  llama2:
+    strengths:
+      - "General reasoning"
+      - "Incident analysis"
+      - "Privacy-sensitive tasks"
+    best_for:
+      - incident_analysis
+      - log_analysis
+      - general_query
+    tuning:
+      temperature: 0.7
+      top_p: 0.9
+
+  deepseek:
+    strengths:
+      - "Code generation"
+      - "Code review"
+      - "Debugging"
+    best_for:
+      - code_generation
+      - code_review
+      - debugging
+    tuning:
+      temperature: 0.3
+      top_p: 0.9
+
+  codellama:
+    strengths:
+      - "Code completion"
+      - "Refactoring"
+      - "Code explanation"
+    best_for:
+      - code_generation
+      - code_review
+    tuning:
+      temperature: 0.4
+      top_p: 0.95
+
+  mistral:
+    strengths:
+      - "Fast inference"
+      - "General tasks"
+      - "Concise responses"
+    best_for:
+      - general_query
+      - documentation
+      - creative_query
+    tuning:
+      temperature: 0.7
+      top_p: 0.9

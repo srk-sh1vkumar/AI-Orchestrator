@@ -1,0 +1,607 @@
+# AI Orchestrator - Dynamic Context-Aware Routing Configuration
+# Enhancement 018: Routing Profiles & Intent-based Provider Selection
+# Version: 1.0
+# Date: 2025-11-21
+
+# =============================================================================
+# ROUTING PROFILES
+# =============================================================================
+# Each profile defines context-specific routing behavior with intent mapping,
+# default providers, and fallback chains.
+
+routing_profiles:
+  # ---------------------------------------------------------------------------
+  # DEVELOPER PROFILE (Enhancement 021: FREE-first optimization)
+  # ---------------------------------------------------------------------------
+  # Optimized for development with FREE providers prioritized
+  developer:
+    description: "Development-focused routing with FREE providers first"
+    default_providers:
+      - deepseek  # FREE - best for code
+      - gemini    # FREE - 1500/day
+      - local     # FREE - unlimited
+
+    intent_mapping:
+      code_generation:
+        primary: deepseek  # FREE specialized code model
+        fallback:
+          - gemini   # FREE tier backup
+          - local    # FREE offline backup
+          - claude_code  # PAID only if FREE fails
+        confidence_threshold: 0.8
+        cache_ttl: 3600  # 1 hour
+
+      code_review:
+        primary: deepseek  # FREE code specialist
+        secondary: local   # FREE privacy-first
+        fallback:
+          - gemini      # FREE tier
+          - claude_code # PAID fallback
+        confidence_threshold: 0.75
+
+      architecture_design:
+        primary: gemini      # FREE tier, good for design
+        secondary: local     # FREE backup
+        fallback:
+          - chatgpt   # PAID only if needed
+        confidence_threshold: 0.7
+
+      debugging:
+        blend:
+          - deepseek  # FREE code specialist
+          - local     # FREE offline
+        strategy: sequential
+        fallback:
+          - gemini      # FREE tier
+          - claude_code # PAID last resort
+        confidence_threshold: 0.8
+
+      documentation:
+        primary: gemini    # FREE tier
+        secondary: local   # FREE backup
+        fallback:
+          - chatgpt  # PAID only if needed
+        confidence_threshold: 0.6
+
+      testing:
+        primary: deepseek  # FREE code specialist
+        secondary: local   # FREE backup
+        fallback:
+          - gemini      # FREE tier
+          - claude_code # PAID fallback
+        confidence_threshold: 0.75
+
+      devops:
+        primary: gemini  # FREE tier
+        fallback:
+          - local       # FREE backup
+          - deepseek    # FREE code tasks
+          - claude_code # PAID fallback
+        confidence_threshold: 0.85
+
+      refactoring:
+        primary: deepseek  # FREE code specialist
+        secondary: gemini  # FREE tier
+        fallback:
+          - local       # FREE backup
+          - claude_code # PAID fallback
+        confidence_threshold: 0.8
+
+    fallback_chain:
+      # Enhancement 021: FREE → FREE → FREE → PAID
+      - deepseek    # FREE - code specialist
+      - local       # FREE - unlimited
+      - gemini      # FREE - 1500/day
+      - claude_code # PAID - high quality
+      - chatgpt     # PAID - creative backup
+
+    settings:
+      prefer_free_tier: true
+      max_free_attempts: 3  # Try all FREE providers before PAID
+      max_latency_ms: 5000
+      cost_weight: 0.8  # High cost sensitivity
+
+  # ---------------------------------------------------------------------------
+  # INCIDENT ANALYSIS PROFILE
+  # ---------------------------------------------------------------------------
+  # Privacy-first incident analysis and root cause investigation
+  incident_analysis:
+    description: "Privacy-focused incident analysis with local model preference"
+    default_providers:
+      - local
+      - gemini
+      - chatgpt
+
+    intent_mapping:
+      log_analysis:
+        primary: local
+        privacy: true
+        no_cache: true
+        confidence_threshold: 0.85
+
+      metrics_analysis:
+        primary: gemini
+        secondary: local
+        cache_ttl: 300  # 5 minutes
+        confidence_threshold: 0.7
+
+      root_cause_analysis:
+        blend:
+          - local
+          - gemini
+        strategy: parallel
+        merge_strategy: combined
+        confidence_threshold: 0.8
+
+      incident_report:
+        primary: chatgpt
+        context_from:
+          - local
+          - gemini
+        confidence_threshold: 0.75
+
+      postmortem:
+        blend:
+          - local
+          - chatgpt
+        strategy: sequential
+        confidence_threshold: 0.8
+
+      security_analysis:
+        primary: local
+        privacy: true
+        no_external: true
+        confidence_threshold: 0.9
+
+      performance_analysis:
+        primary: local
+        secondary: gemini
+        confidence_threshold: 0.75
+
+      alert_triage:
+        primary: local
+        fallback:
+          - gemini
+        confidence_threshold: 0.8
+
+    fallback_chain:
+      - local
+      - gemini
+      - chatgpt
+      - claude
+
+    settings:
+      privacy_mode: true
+      prefer_local: true
+      max_latency_ms: 10000
+      cost_weight: 0.1
+
+  # ---------------------------------------------------------------------------
+  # PRODUCTION PROFILE (Enhancement 021: FREE-first optimization)
+  # ---------------------------------------------------------------------------
+  # Production routing with FREE providers prioritized for cost optimization
+  production:
+    description: "Cost-optimized production routing with FREE providers first"
+    default_providers:
+      - gemini   # FREE - 1500/day
+      - local    # FREE - unlimited
+      - deepseek # FREE - code tasks
+
+    intent_mapping:
+      general_query:
+        primary: gemini  # FREE tier
+        fallback:
+          - local   # FREE backup
+          - claude  # PAID fallback
+        confidence_threshold: 0.5
+
+      technical_query:
+        primary: deepseek  # FREE for code/tech
+        fallback:
+          - gemini      # FREE tier
+          - local       # FREE backup
+          - claude_code # PAID fallback
+        confidence_threshold: 0.7
+
+      creative_query:
+        primary: gemini  # FREE tier
+        fallback:
+          - local    # FREE backup
+          - chatgpt  # PAID fallback
+          - claude   # PAID backup
+        confidence_threshold: 0.6
+
+      simple_task:
+        primary: gemini   # FREE tier
+        secondary: local  # FREE backup
+        confidence_threshold: 0.4
+
+      complex_task:
+        primary: gemini  # FREE tier attempt first
+        fallback:
+          - local       # FREE backup
+          - deepseek    # FREE for code
+          - claude_code # PAID for complex
+          - claude      # PAID backup
+        confidence_threshold: 0.8
+
+      cost_sensitive:
+        primary: local  # FREE unlimited
+        fallback:
+          - gemini  # FREE tier
+        confidence_threshold: 0.3
+
+    fallback_chain:
+      # Enhancement 021: FREE → FREE → FREE → PAID
+      - gemini      # FREE - 1500/day
+      - local       # FREE - unlimited
+      - deepseek    # FREE - code specialist
+      - claude_code # PAID - high quality
+      - chatgpt     # PAID - creative backup
+      - claude      # PAID - final fallback
+
+    settings:
+      prefer_free_tier: true
+      max_free_attempts: 3  # Try all FREE providers before PAID
+      cost_weight: 0.9      # Very high cost sensitivity
+      reliability_weight: 0.1
+      max_latency_ms: 3000
+
+# =============================================================================
+# INTENT PATTERNS
+# =============================================================================
+# Semantic patterns for query intent classification
+
+intent_patterns:
+  code_generation:
+    keywords:
+      - create
+      - write
+      - generate
+      - build
+      - implement
+    patterns:
+      - "create.*function"
+      - "write.*class"
+      - "generate.*code"
+      - "build.*api"
+      - "implement.*feature"
+    embeddings_weight: 0.7
+
+  code_review:
+    keywords:
+      - review
+      - check
+      - audit
+      - examine
+      - analyze code
+    patterns:
+      - "review.*code"
+      - "check.*implementation"
+      - "audit.*changes"
+    embeddings_weight: 0.6
+
+  debugging:
+    keywords:
+      - debug
+      - fix
+      - solve
+      - error
+      - bug
+      - issue
+    patterns:
+      - "fix.*bug"
+      - "debug.*error"
+      - "solve.*issue"
+      - "why.*failing"
+    embeddings_weight: 0.8
+
+  architecture_design:
+    keywords:
+      - architecture
+      - design
+      - system
+      - structure
+      - pattern
+    patterns:
+      - "design.*system"
+      - "architecture.*for"
+      - "structure.*application"
+    embeddings_weight: 0.7
+
+  documentation:
+    keywords:
+      - document
+      - explain
+      - describe
+      - readme
+      - docs
+    patterns:
+      - "document.*code"
+      - "write.*readme"
+      - "explain.*how"
+    embeddings_weight: 0.5
+
+  log_analysis:
+    keywords:
+      - log
+      - logs
+      - parse
+      - analyze logs
+      - error logs
+    patterns:
+      - "analyze.*log"
+      - "parse.*logs"
+      - "find.*in logs"
+    embeddings_weight: 0.8
+
+  root_cause_analysis:
+    keywords:
+      - root cause
+      - why
+      - investigate
+      - determine cause
+      - incident
+    patterns:
+      - "root cause"
+      - "why did.*fail"
+      - "investigate.*incident"
+    embeddings_weight: 0.85
+
+  incident_report:
+    keywords:
+      - report
+      - postmortem
+      - summary
+      - incident report
+    patterns:
+      - "create.*report"
+      - "write.*postmortem"
+      - "incident summary"
+    embeddings_weight: 0.6
+
+  testing:
+    keywords:
+      - test
+      - unit test
+      - integration test
+      - coverage
+    patterns:
+      - "write.*test"
+      - "add.*coverage"
+      - "create.*tests"
+    embeddings_weight: 0.7
+
+  devops:
+    keywords:
+      - deploy
+      - kubernetes
+      - docker
+      - ci/cd
+      - pipeline
+    patterns:
+      - "deploy.*to"
+      - "create.*pipeline"
+      - "setup.*kubernetes"
+    embeddings_weight: 0.8
+
+  refactoring:
+    keywords:
+      - refactor
+      - improve
+      - optimize code
+      - clean up
+    patterns:
+      - "refactor.*code"
+      - "improve.*implementation"
+      - "clean up.*module"
+    embeddings_weight: 0.65
+
+  security_analysis:
+    keywords:
+      - security
+      - vulnerability
+      - breach
+      - audit security
+    patterns:
+      - "security.*audit"
+      - "find.*vulnerabilities"
+      - "check.*security"
+    embeddings_weight: 0.9
+
+  performance_analysis:
+    keywords:
+      - performance
+      - slow
+      - latency
+      - optimize
+      - bottleneck
+    patterns:
+      - "improve.*performance"
+      - "why.*slow"
+      - "find.*bottleneck"
+    embeddings_weight: 0.75
+
+# =============================================================================
+# PROVIDER CAPABILITIES
+# =============================================================================
+# Defines what each provider excels at
+
+provider_capabilities:
+  claude_code:
+    strengths:
+      - code_generation
+      - debugging
+      - devops
+      - refactoring
+      - testing
+    weaknesses:
+      - creative_writing
+      - ui_design
+    cost_tier: paid
+    max_tokens: 200000
+
+  chatgpt:
+    strengths:
+      - documentation
+      - incident_report
+      - creative_query
+      - ui_design
+    weaknesses:
+      - log_analysis
+    cost_tier: paid
+    max_tokens: 128000
+
+  gemini:
+    strengths:
+      - architecture_design
+      - general_query
+      - simple_task
+      - prompt_optimization
+    weaknesses:
+      - code_generation
+    cost_tier: free
+    daily_limit: 1500
+    max_tokens: 1000000
+
+  local:
+    strengths:
+      - log_analysis
+      - security_analysis
+      - root_cause_analysis
+      - performance_analysis
+    weaknesses:
+      - complex_code
+      - creative_writing
+    cost_tier: free
+    privacy: true
+    max_tokens: 4096
+
+  claude:
+    strengths:
+      - complex_task
+      - reasoning
+      - analysis
+    weaknesses: []
+    cost_tier: paid
+    max_tokens: 200000
+
+  deepseek:
+    strengths:
+      - code_generation
+      - debugging
+    weaknesses:
+      - documentation
+    cost_tier: free
+    privacy: true
+    max_tokens: 4096
+
+# =============================================================================
+# BLENDING STRATEGIES
+# =============================================================================
+# Defines how to combine responses from multiple providers
+
+blending_strategies:
+  sequential:
+    description: "Response from provider A passed as context to provider B"
+    use_cases:
+      - debugging
+      - postmortem
+    settings:
+      pass_full_response: true
+      add_context_prompt: true
+
+  parallel:
+    description: "Both providers respond independently, merge results"
+    use_cases:
+      - root_cause_analysis
+      - architecture_design
+    settings:
+      timeout_ms: 10000
+      merge_on_first: false
+
+  consensus:
+    description: "Multiple providers vote on best answer"
+    use_cases:
+      - code_review
+      - security_analysis
+    settings:
+      min_agreement: 0.7
+      tiebreaker: confidence
+
+  combined:
+    description: "Intelligent merge of complementary responses"
+    use_cases:
+      - incident_report
+      - documentation
+    settings:
+      deduplicate: true
+      preserve_structure: true
+
+# =============================================================================
+# COMPLEXITY SCORING
+# =============================================================================
+# Rules for determining query complexity (1-10)
+
+complexity_scoring:
+  factors:
+    token_count:
+      weight: 0.2
+      thresholds:
+        low: 50
+        medium: 200
+        high: 500
+
+    keyword_density:
+      weight: 0.15
+      technical_keywords_boost: 0.1
+
+    multi_intent:
+      weight: 0.25
+      per_intent_boost: 2.0
+
+    context_requirements:
+      weight: 0.2
+      needs_code_context: 2.0
+      needs_system_context: 1.5
+
+    specificity:
+      weight: 0.2
+      vague_penalty: -2.0
+      specific_boost: 1.5
+
+  thresholds:
+    simple: 3
+    moderate: 6
+    complex: 8
+    expert: 9
+
+# =============================================================================
+# GLOBAL SETTINGS
+# =============================================================================
+
+global_settings:
+  default_profile: production
+  auto_detect_profile: true
+  classification_timeout_ms: 100
+  enable_blending: true
+  enable_caching: true
+  cost_awareness: true
+
+  profile_detection:
+    developer_signals:
+      - "write code"
+      - "implement"
+      - "debug"
+      - "refactor"
+      - "@claude_code"
+    incident_signals:
+      - "incident"
+      - "outage"
+      - "analyze log"
+      - "root cause"
+      - "@local"
+    production_signals:
+      - "general"
+      - "help with"
+      - "explain"

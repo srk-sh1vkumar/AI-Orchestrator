@@ -1,0 +1,83 @@
+# Prometheus Scrape Configuration for AI Orchestrator
+# Enhancement 017: Production Architecture - Phase 0
+#
+# This config will be imported by the monitoring-hub project
+# to centrally scrape AI Orchestrator metrics
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'ai-orchestrator'
+    environment: 'development'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - localhost:9093  # Will be updated to monitoring-hub address
+
+# Scrape configurations
+scrape_configs:
+  # AI Orchestrator API metrics
+  - job_name: 'ai-orchestrator-api'
+    static_configs:
+      - targets: ['localhost:8000']
+        labels:
+          service: 'orchestrator-api'
+          component: 'fastapi'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # AI Orchestrator health metrics
+  - job_name: 'ai-orchestrator-health'
+    static_configs:
+      - targets: ['localhost:8000']
+        labels:
+          service: 'orchestrator-health'
+          component: 'health-check'
+    metrics_path: '/api/health'
+    scrape_interval: 30s
+    scrape_timeout: 5s
+
+  # Local LLM metrics (Ollama)
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['localhost:11434']
+        labels:
+          service: 'ollama'
+          component: 'local-llm'
+          provider: 'deepseek'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    # Optional: only scrape if Ollama is running
+    # Will fail gracefully if not available
+
+  # vLLM metrics (Phase 1 - currently disabled)
+  - job_name: 'vllm'
+    static_configs:
+      - targets: ['localhost:8001']
+        labels:
+          service: 'vllm'
+          component: 'local-llm'
+          provider: 'vllm'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    # Will be enabled in Phase 1
+
+# Recording rules (optional - for aggregations)
+# These will be evaluated by Prometheus
+rule_files:
+  # - "orchestrator_rules.yml"
+
+# Optional: Service discovery for dynamic targets
+# Uncomment when deploying to Kubernetes
+# kubernetes_sd_configs:
+#   - role: pod
+#     namespaces:
+#       names:
+#         - ai-orchestrator

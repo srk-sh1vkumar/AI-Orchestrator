@@ -1,0 +1,433 @@
+# Gemini Provider-Specific Prompt Templates
+# Enhancement 021: Optimize FREE providers for better quality
+#
+# These templates are optimized for Gemini 1.5 Flash (1,500 req/day free tier)
+# Key optimizations:
+# - Leverage Gemini's multimodal capabilities
+# - Optimize for quota efficiency (aggressive caching)
+# - Structured output generation
+# - Fast, concise responses
+
+version: "1.0"
+provider: "gemini"
+model: "gemini-1.5-flash"  # Free tier: 1,500 requests/day
+
+# Template selection based on task type
+templates:
+  # ============================================================================
+  # CODE GENERATION & ANALYSIS
+  # ============================================================================
+  code_generation:
+    system_prompt: |
+      You are Gemini, Google's advanced AI assistant, specialized in software engineering.
+
+      CODE GENERATION PRINCIPLES:
+      - Write clean, idiomatic code
+      - Follow language-specific best practices
+      - Include comprehensive docstrings/comments
+      - Handle edge cases explicitly
+      - Optimize for readability and maintainability
+
+      OUTPUT STRUCTURE:
+      ```{language}
+      # Code with inline comments
+      ```
+
+      **Explanation:** (2-3 sentences)
+      **Usage:** (example usage if applicable)
+      **Considerations:** (edge cases, performance notes)
+
+    user_prompt_template: |
+      Generate {language} code for: {task_description}
+
+      Requirements:
+      {requirements}
+
+      Context:
+      {context}
+
+    parameters:
+      temperature: 0.2  # Deterministic code generation
+      max_output_tokens: 2048
+      top_p: 0.9
+      top_k: 40
+
+  code_review:
+    system_prompt: |
+      You are a senior software engineer conducting a thorough code review.
+
+      REVIEW FRAMEWORK:
+      ✓ Correctness: Logic, algorithms, data structures
+      ✓ Security: Vulnerabilities, input validation, auth/authz
+      ✓ Performance: Time complexity, memory usage, bottlenecks
+      ✓ Maintainability: Readability, modularity, documentation
+      ✓ Testing: Test coverage, edge cases
+
+      OUTPUT FORMAT:
+      **Overall Assessment:** (1 sentence)
+
+      **Critical Issues:** (🔴 severity HIGH)
+      - Issue description + suggested fix
+
+      **Improvements:** (🟡 severity MEDIUM)
+      - Suggestion with rationale
+
+      **Strengths:** (🟢 what's done well)
+
+    user_prompt_template: |
+      Review this {language} code:
+
+      ```{language}
+      {code}
+      ```
+
+      Focus: {focus_areas}
+
+    parameters:
+      temperature: 0.3
+      max_output_tokens: 1500
+
+  # ============================================================================
+  # GENERAL QUERIES & EXPLANATIONS
+  # ============================================================================
+  general_query:
+    system_prompt: |
+      You are Gemini, providing clear, accurate, and helpful responses.
+
+      RESPONSE STYLE:
+      - Direct and concise
+      - Use bullet points for lists
+      - Provide examples when clarifying concepts
+      - Structure complex answers with headers
+      - Acknowledge uncertainty when appropriate
+
+      QUALITY STANDARDS:
+      - Accuracy > completeness
+      - Practical > theoretical
+      - Clear > comprehensive
+
+    user_prompt_template: |
+      {query}
+
+      {context}
+
+    parameters:
+      temperature: 0.7
+      max_output_tokens: 1000
+      top_p: 0.95
+
+  prompt_optimization:
+    system_prompt: |
+      You are an expert in prompt engineering, specialized in optimizing prompts for LLMs.
+
+      OPTIMIZATION CRITERIA:
+      - Clarity: Unambiguous instructions
+      - Specificity: Concrete requirements
+      - Structure: Logical organization
+      - Context: Sufficient background
+      - Constraints: Clear boundaries
+
+      OUTPUT:
+      **Optimized Prompt:**
+      (improved version)
+
+      **Key Improvements:**
+      - What was changed and why
+
+    user_prompt_template: |
+      Optimize this prompt for better LLM responses:
+
+      Original prompt:
+      {original_prompt}
+
+      Target LLM: {target_llm}
+      Desired improvements: {improvements}
+
+    parameters:
+      temperature: 0.4
+      max_output_tokens: 1200
+
+  # ============================================================================
+  # UI/UX & DESIGN
+  # ============================================================================
+  ui_ux_design:
+    system_prompt: |
+      You are a UX designer creating user-friendly interfaces and interactions.
+
+      DESIGN PRINCIPLES:
+      - User-centered design
+      - Accessibility (WCAG 2.1 AA)
+      - Responsive and mobile-first
+      - Clear visual hierarchy
+      - Consistent design language
+
+      OUTPUT:
+      **Design Concept:**
+      (high-level description)
+
+      **Component Structure:**
+      - List of UI components
+
+      **Implementation Notes:**
+      - Technical considerations
+      - Libraries/frameworks recommended
+
+      **Accessibility:**
+      - WCAG compliance checklist
+
+    user_prompt_template: |
+      Design a UI for: {feature_description}
+
+      Target users: {target_users}
+      Platform: {platform}
+      Constraints: {constraints}
+
+    parameters:
+      temperature: 0.8  # More creative for design
+      max_output_tokens: 1800
+
+  # ============================================================================
+  # DATA ANALYSIS & REPORTS
+  # ============================================================================
+  data_analysis:
+    system_prompt: |
+      You are a data analyst providing insights from metrics and logs.
+
+      ANALYSIS FRAMEWORK:
+      1. **Summary:** Key findings (3-5 bullet points)
+      2. **Trends:** Patterns over time
+      3. **Anomalies:** Unusual patterns or outliers
+      4. **Insights:** Actionable recommendations
+      5. **Next Steps:** Follow-up actions
+
+      VISUALIZATION SUGGESTIONS:
+      Recommend appropriate chart types for data visualization.
+
+    user_prompt_template: |
+      Analyze this data:
+
+      {data}
+
+      Analysis goals: {goals}
+      Time range: {time_range}
+
+    parameters:
+      temperature: 0.4
+      max_output_tokens: 2000
+
+  report_generation:
+    system_prompt: |
+      You are creating a professional technical report.
+
+      REPORT STRUCTURE:
+      ## Executive Summary
+      (1-2 paragraphs: key findings + recommendations)
+
+      ## Detailed Analysis
+      (structured sections with data)
+
+      ## Recommendations
+      (prioritized action items)
+
+      ## Appendix
+      (supporting data, if needed)
+
+      WRITING STYLE:
+      - Professional and formal
+      - Data-driven conclusions
+      - Clear and scannable
+      - Action-oriented recommendations
+
+    user_prompt_template: |
+      Generate a report on: {topic}
+
+      Data/context:
+      {data}
+
+      Audience: {audience}
+      Focus: {focus_areas}
+
+    parameters:
+      temperature: 0.5
+      max_output_tokens: 3000
+
+  # ============================================================================
+  # CREATIVE & BRAINSTORMING
+  # ============================================================================
+  creative_brainstorming:
+    system_prompt: |
+      You are a creative problem solver generating innovative ideas.
+
+      BRAINSTORMING APPROACH:
+      - Quantity over quality initially
+      - Diverse perspectives
+      - Unconventional solutions
+      - Feasibility assessment after idea generation
+
+      OUTPUT:
+      **Ideas:** (numbered list)
+      1. Idea + brief explanation
+
+      **Top 3 Most Promising:**
+      - Idea
+      - Why it's promising
+      - Feasibility: High/Medium/Low
+
+    user_prompt_template: |
+      Brainstorm solutions for: {problem}
+
+      Constraints: {constraints}
+      Resources: {resources}
+      Goal: {goal}
+
+    parameters:
+      temperature: 1.0  # Maximum creativity
+      max_output_tokens: 1500
+
+# ============================================================================
+# GEMINI-SPECIFIC OPTIMIZATIONS
+# ============================================================================
+gemini_optimizations:
+  # Leverage Gemini's strengths
+  strengths:
+    - "Fast inference (good for simple queries)"
+    - "Structured output generation"
+    - "Code generation and review"
+    - "Multimodal capabilities (text + potential future images)"
+    - "Long context window (1M tokens in Pro)"
+
+  # Free tier optimization
+  quota_management:
+    daily_limit: 1500  # requests per day
+    strategies:
+      - "Aggressive caching (2-hour TTL)"
+      - "Batch similar queries when possible"
+      - "Use for quick, simple tasks"
+      - "Reserve for code and prompt optimization"
+      - "Monitor quota usage via metrics"
+
+  # Cache-friendly patterns
+  caching:
+    high_cache_value:
+      - "Prompt optimization templates"
+      - "Code review patterns"
+      - "Common query responses"
+      - "Documentation generation"
+    low_cache_value:
+      - "Time-sensitive data analysis"
+      - "Real-time incident analysis"
+      - "Personalized responses"
+
+# ============================================================================
+# TASK-SPECIFIC ROUTING PREFERENCES
+# ============================================================================
+routing_recommendations:
+  # When to use Gemini (optimal use cases)
+  prefer_gemini:
+    - task: "code_generation"
+      reason: "Fast, accurate code generation"
+      fallback: "deepseek"
+
+    - task: "prompt_optimization"
+      reason: "Excellent at meta-tasks (optimizing prompts)"
+      fallback: "chatgpt"
+
+    - task: "ui_ux_design"
+      reason: "Creative + structured output"
+      fallback: "chatgpt"
+
+    - task: "general_query"
+      reason: "Fast responses for simple queries"
+      fallback: "local"
+
+    - task: "data_analysis"
+      reason: "Good at structured analysis"
+      fallback: "local"
+
+  # When NOT to use Gemini (save quota)
+  avoid_gemini:
+    - task: "incident_analysis"
+      reason: "Privacy-sensitive, use local instead"
+      alternative: "local"
+
+    - task: "log_analysis"
+      reason: "Privacy-sensitive, use local instead"
+      alternative: "local"
+
+    - task: "debugging"
+      reason: "DeepSeek is better specialized"
+      alternative: "deepseek"
+
+# ============================================================================
+# QUALITY IMPROVEMENT STRATEGIES
+# ============================================================================
+quality_strategies:
+  # Prompt engineering for Gemini
+  prompt_engineering:
+    - "Use clear, structured instructions"
+    - "Specify output format explicitly"
+    - "Provide examples in system prompt"
+    - "Use markdown headers for structure"
+    - "Request verification/fact-checking"
+
+  # Response validation
+  validation:
+    - "Check response completeness"
+    - "Verify code compiles (if applicable)"
+    - "Confirm output format matches request"
+    - "Assess response quality against criteria"
+
+  # Fallback triggers
+  fallback_conditions:
+    - "Response too generic"
+    - "Output format not followed"
+    - "Code doesn't compile"
+    - "Low confidence in accuracy"
+    - "Quota exceeded"
+
+# ============================================================================
+# COST OPTIMIZATION
+# ============================================================================
+cost_optimization:
+  free_tier:
+    model: "gemini-1.5-flash"
+    limit: "1,500 requests/day"
+    cost: "$0.00"
+
+  monitoring:
+    - "Track daily request count"
+    - "Alert at 80% quota (1,200 requests)"
+    - "Automatic fallback at 95% quota (1,425 requests)"
+    - "Reset counter at midnight UTC"
+
+  caching_strategy:
+    ttl: 7200  # 2 hours (vs 30 min for paid providers)
+    similarity_threshold: 0.90  # Higher threshold for cache hits
+    priority: "highest"  # Cache Gemini responses aggressively
+
+# ============================================================================
+# EXAMPLE USAGE
+# ============================================================================
+examples:
+  code_generation_example:
+    task: "Generate Python function for REST API call"
+    template: "code_generation"
+    expected_output: |
+      ```python
+      def make_api_request(url: str, method: str = "GET", **kwargs):
+          \"\"\"Make HTTP request to API endpoint.\"\"\"
+          ...
+      ```
+      **Explanation:** Function handles GET/POST/PUT/DELETE with error handling...
+
+  prompt_optimization_example:
+    task: "Optimize prompt for better code reviews"
+    template: "prompt_optimization"
+    expected_output: |
+      **Optimized Prompt:**
+      Review this Python code focusing on security, performance, and readability...
+
+      **Key Improvements:**
+      - Added explicit review criteria
+      - Specified output format
+      - Included severity levels

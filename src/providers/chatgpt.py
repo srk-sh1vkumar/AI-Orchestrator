@@ -16,7 +16,7 @@ class ChatGPTProvider(BaseLLMProvider):
         """Initialize ChatGPT provider."""
         super().__init__(LLMProvider.CHATGPT)
         self.client = AsyncOpenAI(api_key=settings.openai_api_key)
-        self.model = "gpt-4-turbo-preview"
+        self.model = "gpt-4o"
 
     async def _complete_impl(
         self,

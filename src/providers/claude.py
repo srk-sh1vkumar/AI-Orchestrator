@@ -15,7 +15,7 @@ class ClaudeProvider(BaseLLMProvider):
         """Initialize Claude provider."""
         super().__init__(LLMProvider.CLAUDE)
         self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-        self.model = "claude-3-5-sonnet-20241022"
+        self.model = "claude-sonnet-4-6"  # Claude 4.x family (updated 2026-05-31)
 
     async def _complete_impl(
         self,

@@ -1,0 +1,109 @@
+# Production Profile - Detailed Configuration
+# Balanced routing with reliability and cost optimization
+
+profile_name: production
+description: "Balanced routing for production with cost awareness"
+version: "1.0"
+
+# Primary provider selection - balance cost and quality
+default_providers:
+  - gemini
+  - local
+  - claude_code
+
+# Intent-specific routing
+intent_mapping:
+  general_query:
+    primary: gemini
+    fallback:
+      - local
+      - claude
+    confidence_threshold: 0.5
+    system_prompt_modifier: |
+      Provide helpful, accurate response.
+      Be concise but complete.
+
+  technical_query:
+    primary: claude_code
+    fallback:
+      - gemini
+    confidence_threshold: 0.7
+    system_prompt_modifier: |
+      Provide technically accurate response with examples.
+
+  creative_query:
+    primary: chatgpt
+    fallback:
+      - claude
+    confidence_threshold: 0.6
+
+  simple_task:
+    primary: gemini
+    secondary: local
+    confidence_threshold: 0.4
+    system_prompt_modifier: |
+      Complete the task efficiently.
+      Use minimal tokens while being complete.
+
+  complex_task:
+    primary: claude_code
+    secondary: claude
+    confidence_threshold: 0.8
+    system_prompt_modifier: |
+      Break down complex task into steps.
+      Ensure comprehensive solution.
+
+  cost_sensitive:
+    primary: local
+    fallback:
+      - gemini
+    confidence_threshold: 0.3
+    system_prompt_modifier: |
+      Optimize for efficiency. Provide concise response.
+
+# Fallback chain
+fallback_chain:
+  - gemini
+  - local
+  - claude_code
+  - chatgpt
+  - claude
+
+# Profile-specific settings
+settings:
+  prefer_free_tier: true
+  cost_weight: 0.7
+  reliability_weight: 0.3
+  quality_weight: 0.5
+  max_latency_ms: 3000
+
+  # Cost optimization
+  use_cheapest_capable: true
+  respect_quotas: true
+  budget_awareness: true
+
+  # Reliability features
+  circuit_breaker_enabled: true
+  retry_on_failure: true
+  max_retries: 2
+
+  # Caching behavior
+  cache_enabled: true
+  cache_ttl_default: 3600
+  cache_similar_queries: true
+
+# Context signals that activate this profile
+activation_signals:
+  keywords:
+    - "help"
+    - "explain"
+    - "what is"
+    - "how to"
+
+  explicit_mentions:
+    - "@production"
+    - "@balanced"
+
+  default_when:
+    - no_other_profile_matches: true
+    - generic_query: true
