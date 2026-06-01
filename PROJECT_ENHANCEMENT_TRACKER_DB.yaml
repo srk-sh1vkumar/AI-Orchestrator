@@ -1374,13 +1374,141 @@ enhancements:
       - "No breaking changes to existing routing API"
       - "Profile system allows gradual rollout (default → developer → all profiles)"
 
+  - id: "019"
+    db_reference: "db-uuid-019-rag-memory-layer"
+    title: "RAG-Based Persistent Memory & Context Injection Layer"
+    category: "Routing & Intelligence"
+    priority: "Medium"
+    status: "Planned"
+    impact: "Eliminate cold-start context loss, improve response relevance by injecting past decisions/sessions, reduce redundant LLM calls by 20-30%"
+    related_agent: "Orchestrator Core + Task Router"
+    estimated_hours: 20
+    actual_hours: null
+    completion_percentage: 0
+    dependencies:
+      - yaml_id: "004"
+        note: "Reuses embedding infrastructure from Semantic Caching (✅ COMPLETE)"
+      - yaml_id: "012"
+        note: "Builds on State Management & Persistence Layer for memory storage"
+      - yaml_id: "001"
+        note: "Extends Intent-Based Routing to include memory-aware context selection"
+    technical_summary: |
+      Add a retrieval-augmented generation (RAG) memory layer to the orchestrator so that relevant
+      context from past sessions, decisions, and project state is automatically injected into
+      requests — without requiring the user to re-explain context each session.
+
+      Inspired by agent memory systems (e.g. Obsidian Mind), but implemented natively within the
+      orchestrator stack (MongoDB + Redis) rather than as a separate tool.
+
+      **Problem Statement:**
+      - Every session starts cold — the LLM has no knowledge of prior work or decisions
+      - Users repeat context ("we use MongoDB", "don't use mocks", "we're targeting 80% free tier")
+      - No connection between the Growth Tracker reflections and live LLM context
+      - Semantic caching handles identical queries but not related context retrieval
+
+      **Solution:**
+      A tiered memory store with vector-indexed retrieval. Before routing any request, the orchestrator
+      queries the memory store for relevant prior context and prepends a concise context block to the
+      prompt. Memory is written automatically from session summaries, reflections, and explicit saves.
+
+      **Key Components:**
+      1. **Memory Store** - MongoDB collection (memory_entries) with vector embeddings; tiered by
+         type: session_summary, decision, project_fact, user_preference
+      2. **Memory Retriever** - cosine similarity search over embeddings (reuses Sentence-Transformers
+         from Enhancement 004); returns top-k relevant entries with configurable k and score threshold
+      3. **Context Injector** - pre-routing hook that builds a compact context block (~500-1000 tokens)
+         from retrieved memories and prepends to the prompt
+      4. **Memory Writer** - post-session hook that extracts and stores key facts from session
+         summaries (Growth API reflections → memory entries)
+      5. **Memory API** - CRUD endpoints on the existing FastAPI backend for explicit memory management
+         (save, retrieve, delete, list by type/tag)
+
+    technical_breakdown:
+      phases:
+        phase_1:
+          name: "Memory Store & Retrieval"
+          estimated_hours: 8
+          tasks:
+            - "Define memory_entries MongoDB collection schema (type, content, embedding, tags, ttl)"
+            - "Implement MemoryStore class with upsert, vector search, and TTL management"
+            - "Reuse Sentence-Transformers embedding pipeline from semantic cache"
+            - "Write unit tests for retrieval accuracy and latency"
+          deliverables:
+            - "src/memory/memory_store.py"
+            - "src/memory/embeddings.py (thin wrapper over existing pipeline)"
+            - "tests/test_memory_store.py"
+
+        phase_2:
+          name: "Context Injection & Pre-Routing Hook"
+          estimated_hours: 6
+          tasks:
+            - "Add pre_route_hook() to orchestrator that calls MemoryRetriever"
+            - "Implement context block formatter (concise, token-budget-aware, ~500-1000 tokens)"
+            - "Add config flag to enable/disable memory injection per request or globally"
+            - "Ensure injection is skipped when memory store is empty or retrieval scores are low"
+          deliverables:
+            - "src/memory/context_injector.py"
+            - "Updated src/core/orchestrator.py (pre_route_hook integration)"
+
+        phase_3:
+          name: "Memory Writer & Growth API Bridge"
+          estimated_hours: 4
+          tasks:
+            - "Implement post-session hook to extract facts from session summaries"
+            - "Bridge Growth Tracker API reflections → memory entries (topics, accomplishments, insights)"
+            - "Add memory CRUD endpoints to FastAPI (GET /memory, POST /memory, DELETE /memory/{id})"
+            - "Add React UI panel for viewing/managing stored memories"
+          deliverables:
+            - "src/memory/memory_writer.py"
+            - "src/api/routes/memory.py"
+            - "frontend/src/components/MemoryPanel.tsx"
+
+      token_strategy:
+        always_on: "User preferences and project facts (~200 tokens)"
+        on_demand: "Session summaries and past decisions retrieved by semantic similarity"
+        never_injected: "Raw logs, full session transcripts, code blobs"
+        budget: "Hard cap of 1000 tokens for injected context; summarize if over limit"
+
+      storage_design:
+        collection: "memory_entries"
+        fields:
+          - "id: UUID"
+          - "type: enum(session_summary, decision, project_fact, user_preference)"
+          - "content: str (human-readable text)"
+          - "embedding: float[] (384-dim, Sentence-Transformers all-MiniLM-L6-v2)"
+          - "tags: list[str]"
+          - "source: str (growth_api, explicit_save, auto_extract)"
+          - "created_at: datetime"
+          - "ttl_days: int | null (null = permanent)"
+        indexes:
+          - "vector index on embedding (MongoDB Atlas Search or local HNSW)"
+          - "compound index on (type, tags)"
+
+    expected_outcomes:
+      immediate:
+        - "No more cold-start context loss across sessions"
+        - "User preferences (tone, libraries, constraints) auto-injected into every request"
+      short_term:
+        - "20-30% reduction in redundant context-setting messages"
+        - "Growth Tracker reflections become searchable memory, not just logs"
+      long_term:
+        - "Orchestrator builds a project knowledge graph over time"
+        - "Memory retrieval improves routing decisions (preference-aware provider selection)"
+
+    integration_notes:
+      - "Reuses Sentence-Transformers pipeline from Enhancement 004 — no new embedding infra needed"
+      - "MongoDB already running; adds one new collection, no schema migrations to existing collections"
+      - "Growth API at http://localhost:8000/api/growth/reflections is the primary memory seed source"
+      - "Token budget enforced to avoid context bloat — safe to enable by default"
+      - "Inspired by Obsidian Mind vault memory pattern, implemented natively in orchestrator stack"
+
 # ============================================================================
 # PROJECT PROGRESS SUMMARY
 # ============================================================================
 
 progress:
-  total_enhancements: 18  # Added 017: Production-Grade Architecture, 018: Dynamic Context Routing
-  phase_1_count: 7  # Includes 006 (complete) and 018 (planned)
+  total_enhancements: 19  # Added 019: RAG-Based Persistent Memory & Context Injection Layer
+  phase_1_count: 8  # Includes 006 (complete), 018 (planned), 019 (planned)
   phase_2_count: 5
   phase_3_count: 2
   phase_4_count: 3  # Project Management & Intelligence
@@ -1391,7 +1519,7 @@ progress:
     in_progress: 1  # 012 (Phase 1 complete, Phase 2 pending)
     design: 0
     definition: 0
-    planned: 11  # 005, 007, 008, 009, 010, 011, 014, 015, 016, 017, 018
+    planned: 12  # 005, 007, 008, 009, 010, 011, 014, 015, 016, 017, 018, 019
 
   completion_rate: "33%"  # 6/18 complete (012 is 70% complete)
   estimated_total_hours: 230.0  # 224 + 6 (012 Phase 2) = 230 hours
@@ -1439,6 +1567,8 @@ progress:
       reason: "Cost tracking - builds on persistence layer, high ROI"
     - id: "018"
       reason: "Dynamic context-aware routing - builds on 001 and 006, eliminates generic responses"
+    - id: "019"
+      reason: "RAG memory layer - eliminates cold-start context loss, reuses existing embedding infra from 004"
 
 # ============================================================================
 # PHASE 1 KICKOFF - CRITICAL DESIGN QUESTIONS
@@ -1559,7 +1689,7 @@ database_integration:
 
 metadata:
   created_date: "2025-01-15"
-  last_updated: "2025-10-20"
+  last_updated: "2026-05-31"
   version: "2.0"
   format: "YAML"
   schema_reference: "docs/DATABASE_SCHEMA.md"

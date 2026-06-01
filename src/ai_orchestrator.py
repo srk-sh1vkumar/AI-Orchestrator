@@ -43,20 +43,7 @@ def initialize_project_context() -> Dict[str, Any]:
             "estimated_costs_usd": 0.0
         },
         "self_development": {
-            "goals": [
-                {
-                    "id": "g1",
-                    "title": "Example Goal 1",
-                    "status": "In Progress",
-                    "progress": 35
-                },
-                {
-                    "id": "g2",
-                    "title": "Example Goal 2",
-                    "status": "Planned",
-                    "progress": 0
-                }
-            ],
+            "goals": [],
             "milestones": [],
             "reflections": [],
             "metrics": {

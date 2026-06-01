@@ -9,8 +9,6 @@ import structlog
 from src.models.schemas import ChatRequest, ChatResponse, HealthStatus
 from src.core.orchestrator import Orchestrator
 from src.core.config import settings
-from src.api.personal_tracker import router as tracker_router
-from src.api.growth import router as growth_router
 from src.api.monitoring import router as monitoring_router
 from src.api.costs import router as costs_router
 from src.api.enhancements import router as enhancements_router
@@ -176,8 +174,6 @@ app.mount("/metrics", metrics_app)
 orchestrator = Orchestrator()
 
 # Include routers
-app.include_router(tracker_router)
-app.include_router(growth_router)
 app.include_router(monitoring_router)
 app.include_router(costs_router)
 app.include_router(enhancements_router)

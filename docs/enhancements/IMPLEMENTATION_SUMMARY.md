@@ -234,7 +234,7 @@ open htmlcov/index.html
     "goals": [
       {
         "id": "g1",
-        "title": "Example Goal 1",
+        "title": "Example Goal Title",
         "status": "In Progress",
         "progress": 65
       }

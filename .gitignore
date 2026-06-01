@@ -64,3 +64,7 @@ private/
 personal_tracker_data.json
 growth_data/
 session_data/
+
+# Runtime state files (contain personal data)
+manifest_state.json
+orchestrator_summary.json

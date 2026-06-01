@@ -329,26 +329,13 @@ if __name__ == "__main__":
             }
         },
         "self_development": {
-            "goals": [
-                {
-                    "id": "g1",
-                    "title": "Example Goal 1",
-                    "status": "In Progress",
-                    "progress": 35
-                },
-                {
-                    "id": "g2",
-                    "title": "Example Goal 2",
-                    "status": "Planned",
-                    "progress": 0
-                }
-            ],
+            "goals": [],
             "milestones": [],
             "reflections": [],
             "metrics": {
-                "learning_hours": 12.5,
-                "completed_projects": 2,
-                "skills_gained": ["Python", "FastAPI", "Docker"]
+                "learning_hours": 0,
+                "completed_projects": 0,
+                "skills_gained": []
             }
         }
     }
