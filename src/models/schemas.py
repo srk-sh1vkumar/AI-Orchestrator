@@ -13,9 +13,11 @@ class LLMProvider(str, Enum):
     GEMINI = "gemini"
     CLAUDE = "claude"
     LOCAL = "local"
-    MISTRAL = "mistral"  # Mistral 7B for general incident analysis
-    LLAMA2 = "llama2"    # Llama2 7B for log analysis
-    CODELLAMA = "codellama"  # CodeLlama 7B for code-related incident analysis
+    DEEPSEEK = "deepseek"
+    VLLM = "vllm"
+    MISTRAL = "mistral"
+    LLAMA2 = "llama2"
+    CODELLAMA = "codellama"
 
 
 class TaskCategory(str, Enum):

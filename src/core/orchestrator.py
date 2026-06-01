@@ -28,6 +28,8 @@ from src.core.context_manager import get_context_manager, ContextStatus, Truncat
 from src.core.semantic_cache import get_semantic_cache
 from src.core.rate_limiter import get_rate_limiter
 from src.core.collaboration_manager import get_collaboration_manager, CollaborationManager, CollaborationPlan
+from src.core.conversation_state import get_state_manager, ConversationStateManager
+from src.core.registry import get_provider_registry, ProviderRegistry
 from src.database.mongodb import get_mongodb_manager, MongoDBManager
 from src.database.repositories import (
     ConversationRepository,
@@ -71,6 +73,7 @@ class Orchestrator:
         self.context_manager = get_context_manager()
         self.rate_limiter = get_rate_limiter()
         self.collaboration_manager = get_collaboration_manager()
+        self.state_manager: ConversationStateManager = get_state_manager()
 
         # Initialize semantic cache if enabled
         self.enable_cache = enable_cache
@@ -95,8 +98,9 @@ class Orchestrator:
         self.context_event_repo: Optional[ContextEventRepository] = None
         self.budget_manager: Optional[BudgetManager] = None
 
-        # Initialize providers
+        # Initialize providers via registry (falls back to hardcoded if config missing)
         self.providers: Dict[LLMProvider, BaseLLMProvider] = {}
+        self.provider_registry: ProviderRegistry = get_provider_registry()
         self._init_providers()
 
     def _get_rate_limiter_provider_name(self, provider: LLMProvider) -> str:
@@ -119,23 +123,30 @@ class Orchestrator:
         return mapping.get(provider, provider.value)
 
     def _init_providers(self) -> None:
-        """Initialize available LLM providers."""
+        """Initialize providers from registry config; fall back to hardcoded defaults."""
+        registry_providers = self.provider_registry.active_providers()
+
+        if registry_providers:
+            self.providers = registry_providers
+            self.logger.info(
+                "providers_loaded_from_registry",
+                count=len(registry_providers),
+                names=[p.value for p in registry_providers],
+            )
+            return
+
+        # Registry config missing or empty — use hardcoded defaults
+        self.logger.warning("registry_empty_using_defaults")
         if settings.anthropic_api_key:
             self.providers[LLMProvider.CLAUDE_CODE] = ClaudeCodeProvider()
             self.providers[LLMProvider.CLAUDE] = ClaudeProvider()
-            self.logger.info("claude_providers_initialized")
-
         if settings.openai_api_key:
             self.providers[LLMProvider.CHATGPT] = ChatGPTProvider()
-            self.logger.info("chatgpt_provider_initialized")
-
         if settings.google_api_key:
             self.providers[LLMProvider.GEMINI] = GeminiProvider()
-            self.logger.info("gemini_provider_initialized")
-
         if settings.local_llm_enabled:
             self.providers[LLMProvider.LOCAL] = LocalLLMProvider()
-            self.logger.info("local_llm_provider_initialized")
+        self.logger.info("default_providers_initialized", count=len(self.providers))
 
     async def _init_persistence(self) -> None:
         """Initialize MongoDB persistence layer (async)."""
