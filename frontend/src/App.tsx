@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
-import { MessageSquare, Code2, Settings, Target, TrendingUp, Activity } from 'lucide-react';
+import { MessageSquare, Settings, Activity } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Sidebar } from './components/Sidebar';
 import { ChatPage } from './pages/ChatPage';
-import { SelfDevelopmentPage } from './pages/SelfDevelopmentPage';
-import { PersonalTrackerPage } from './pages/PersonalTrackerPage';
-import { GrowthTrackingPage } from './pages/GrowthTrackingPage';
 import MonitoringDashboardPage from './pages/MonitoringDashboardPage';
 import type { LLMProvider } from './types';
 
-type TabId = 'chat' | 'self-dev' | 'personal-tracker' | 'growth' | 'monitoring' | 'settings';
+type TabId = 'chat' | 'monitoring' | 'settings';
 
 function App() {
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider | undefined>();
@@ -17,9 +14,6 @@ function App() {
 
   const tabs = [
     { id: 'chat' as TabId, name: 'Chat', icon: MessageSquare },
-    { id: 'self-dev' as TabId, name: 'Self Development', icon: Code2 },
-    { id: 'personal-tracker' as TabId, name: 'Personal Tracker', icon: Target },
-    { id: 'growth' as TabId, name: 'Growth', icon: TrendingUp },
     { id: 'monitoring' as TabId, name: 'Monitoring', icon: Activity },
     { id: 'settings' as TabId, name: 'Settings', icon: Settings },
   ];
@@ -28,12 +22,6 @@ function App() {
     switch (activeTab) {
       case 'chat':
         return <ChatPage selectedProvider={selectedProvider} />;
-      case 'self-dev':
-        return <SelfDevelopmentPage />;
-      case 'personal-tracker':
-        return <PersonalTrackerPage />;
-      case 'growth':
-        return <GrowthTrackingPage />;
       case 'monitoring':
         return <MonitoringDashboardPage />;
       case 'settings':
